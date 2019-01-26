@@ -48,3 +48,11 @@ pkg_SOURCES += main/compressors/zlib.c
 pkg_CFLAGS += $(ZLIB_CFLAGS)
 pkg_LDADD += $(ZLIB_LIBS)
 endif
+
+# lzma compressor
+if WITH_LZMA
+pkg_SOURCES += main/compressors/lzma.c
+
+pkg_CFLAGS += $(XZ_CFLAGS)
+pkg_LDADD += $(XZ_LIBS)
+endif

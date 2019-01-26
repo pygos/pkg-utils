@@ -15,6 +15,7 @@ typedef enum {
 typedef enum {
 	PKG_COMPRESSION_NONE = 0,
 	PKG_COMPRESSION_ZLIB = 1,
+	PKG_COMPRESSION_LZMA = 2,
 } PKG_COMPRESSION;
 
 typedef struct {

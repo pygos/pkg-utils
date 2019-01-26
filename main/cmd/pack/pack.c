@@ -14,6 +14,10 @@ static compressor_t *get_default_compressor(void)
 {
 	compressor_t *cmp;
 
+	cmp = compressor_by_id(PKG_COMPRESSION_LZMA);
+	if (cmp != NULL)
+		return cmp;
+
 	cmp = compressor_by_id(PKG_COMPRESSION_ZLIB);
 	if (cmp != NULL)
 		return cmp;
