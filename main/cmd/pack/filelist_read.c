@@ -11,59 +11,6 @@ static const struct {
 
 #define NUM_LINE_HOOKS (sizeof(line_hooks) / sizeof(line_hooks[0]))
 
-static int prefetch_line(input_file_t *f)
-{
-	char *line = NULL;
-	size_t n = 0;
-	ssize_t ret;
-
-	free(f->line);
-	f->line = NULL;
-
-	errno = 0;
-	ret = getline(&line, &n, f->f);
-
-	if (ret < 0) {
-		if (errno != 0) {
-			perror(f->filename);
-			free(line);
-			return -1;
-		}
-		free(line);
-		return 1;
-	}
-
-	n = strlen(line);
-	while (n >0 && isspace(line[n - 1]))
-		--n;
-	line[n] = '\0';
-
-	f->line = line;
-	f->linenum += 1;
-	return 0;
-}
-
-static void cleanup_file(input_file_t *f)
-{
-	fclose(f->f);
-	free(f->line);
-}
-
-static int open_file(input_file_t *f, const char *filename)
-{
-	memset(f, 0, sizeof(*f));
-
-	f->filename = filename;
-	f->f = fopen(filename, "r");
-
-	if (f->f == NULL) {
-		perror(f->filename);
-		return -1;
-	}
-
-	return 0;
-}
-
 image_entry_t *filelist_read(const char *filename)
 {
 	image_entry_t *ent, *list = NULL;
@@ -82,11 +29,7 @@ image_entry_t *filelist_read(const char *filename)
 		if (ret > 0)
 			break;
 
-		for (ptr = f.line; isspace(*ptr); ++ptr)
-			;
-
-		if (*ptr == '\0' || *ptr == '#')
-			continue;
+		ptr = f.line;
 
 		for (i = 0; i < NUM_LINE_HOOKS; ++i) {
 			len = strlen(line_hooks[i].name);

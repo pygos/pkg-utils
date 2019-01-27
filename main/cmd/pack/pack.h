@@ -40,4 +40,10 @@ int write_toc(pkg_writer_t *wr, image_entry_t *list, compressor_t *cmp);
 
 int write_files(pkg_writer_t *wr, image_entry_t *list, compressor_t *cmp);
 
+int prefetch_line(input_file_t *f);
+
+void cleanup_file(input_file_t *f);
+
+int open_file(input_file_t *f, const char *filename);
+
 #endif /* PACK_H */
