@@ -30,6 +30,7 @@ pkg_SOURCES += main/cmd/pack/write_hdr.c
 
 # dump command
 pkg_SOURCES += main/cmd/dump/dump.c main/cmd/dump/dump.h main/cmd/dump/dump_toc.c
+pkg_SOURCES += main/cmd/dump/dump_header.c
 
 # unpack command
 pkg_SOURCES += main/cmd/unpack/unpack.c main/cmd/unpack/unpack.h

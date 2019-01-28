@@ -1,12 +1,14 @@
 #include "dump.h"
 
 static const struct option long_opts[] = {
+	{ "dependencies", no_argument, NULL, 'd' },
+	{ "list-files", no_argument, NULL, 'l' },
 	{ "format", required_argument, NULL, 'f' },
 	{ "root", required_argument, NULL, 'r' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "f:r:";
+static const char *short_opts = "dlf:r:";
 
 static int cmd_dump(int argc, char **argv)
 {
@@ -15,7 +17,7 @@ static int cmd_dump(int argc, char **argv)
 	const char *root = NULL;
 	int ret = EXIT_FAILURE;
 	pkg_reader_t *rd;
-	int i;
+	int i, flags = 0;
 
 	for (;;) {
 		i = getopt_long(argc, argv, short_opts, long_opts, NULL);
@@ -38,11 +40,20 @@ static int cmd_dump(int argc, char **argv)
 		case 'r':
 			root = optarg;
 			break;
+		case 'l':
+			flags |= DUMP_TOC;
+			break;
+		case 'd':
+			flags |= DUMP_DEPS;
+			break;
 		default:
 			tell_read_help(argv[0]);
 			return EXIT_FAILURE;
 		}
 	}
+
+	if (flags == 0)
+		flags = DUMP_ALL;
 
 	if (optind >= argc) {
 		fputs("missing argument: package file\n", stderr);
@@ -57,12 +68,19 @@ static int cmd_dump(int argc, char **argv)
 	if (optind < argc)
 		fputs("warning: ignoring extra arguments\n", stderr);
 
+	if (flags & DUMP_DEPS) {
+		if (dump_header(rd, flags))
+			goto out;
+	}
+
 	list = image_entry_list_from_package(rd);
 	if (list == NULL)
 		goto out;
 
-	if (dump_toc(list, root, format))
-		goto out;
+	if (flags & DUMP_TOC) {
+		if (dump_toc(list, root, format))
+			goto out;
+	}
 
 	ret = EXIT_SUCCESS;
 out:
@@ -81,6 +99,11 @@ static command_t dump = {
 "files, et cetera.\n"
 "\n"
 "Possible options:\n"
+"  --dependencies, -d     Show dependency information of a package.\n"
+"\n"
+"  --list-files, -l       Produce a list of files. The format for the list\n"
+"                         can be specified with --format.\n"
+"\n"
 "  --format, -f <format>  Specify what format to use for printing the table\n"
 "                         of contents. Default is a pretty printed, human\n"
 "                         readable version.\n"
