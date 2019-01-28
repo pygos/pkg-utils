@@ -28,6 +28,16 @@ typedef struct {
 	size_t linenum;
 } input_file_t;
 
+typedef struct dependency_t {
+	struct dependency_t *next;
+	int type;
+	char name[];
+} dependency_t;
+
+typedef struct {
+	dependency_t *deps;
+} pkg_desc_t;
+
 image_entry_t *filelist_mkdir(input_file_t *f);
 
 image_entry_t *filelist_mkslink(input_file_t *f);
@@ -45,5 +55,11 @@ int prefetch_line(input_file_t *f);
 void cleanup_file(input_file_t *f);
 
 int open_file(input_file_t *f, const char *filename);
+
+int desc_read(const char *path, pkg_desc_t *desc);
+
+void desc_free(pkg_desc_t *desc);
+
+int write_header_data(pkg_writer_t *wr, pkg_desc_t *desc);
 
 #endif /* PACK_H */

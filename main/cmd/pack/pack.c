@@ -3,12 +3,13 @@
 static const struct option long_opts[] = {
 	{ "toc-compressor", required_argument, NULL, 't' },
 	{ "file-compressor", required_argument, NULL, 'f' },
+	{ "description", required_argument, NULL, 'd' },
 	{ "file-list", required_argument, NULL, 'l' },
 	{ "output", required_argument, NULL, 'o' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "t:f:l:o:";
+static const char *short_opts = "t:f:l:o:d:";
 
 static compressor_t *get_default_compressor(void)
 {
@@ -61,10 +62,11 @@ static int alloc_file_ids(image_entry_t *list)
 
 static int cmd_pack(int argc, char **argv)
 {
-	const char *filelist = NULL, *filename = NULL;
+	const char *filelist = NULL, *filename = NULL, *descfile = NULL;
 	compressor_t *cmp_toc, *cmp_files;
 	image_entry_t *list;
 	pkg_writer_t *wr;
+	pkg_desc_t desc;
 	int i;
 
 	cmp_toc = get_default_compressor();
@@ -97,10 +99,19 @@ static int cmd_pack(int argc, char **argv)
 		case 'o':
 			filename = optarg;
 			break;
+		case 'd':
+			descfile = optarg;
+			break;
 		default:
 			tell_read_help(argv[0]);
 			return EXIT_FAILURE;
 		}
+	}
+
+	if (descfile == NULL) {
+		fputs("missing argument: package description file\n", stderr);
+		tell_read_help(argv[0]);
+		return EXIT_FAILURE;
 	}
 
 	if (filename == NULL) {
@@ -118,9 +129,12 @@ static int cmd_pack(int argc, char **argv)
 	if (optind < argc)
 		fputs("warning: ignoring extra arguments\n", stderr);
 
+	if (desc_read(descfile, &desc))
+		return EXIT_FAILURE;
+
 	list = filelist_read(filelist);
 	if (list == NULL)
-		return EXIT_FAILURE;
+		goto fail_desc;
 
 	list = image_entry_sort(list);
 
@@ -131,6 +145,9 @@ static int cmd_pack(int argc, char **argv)
 	if (wr == NULL)
 		goto fail_fp;
 
+	if (write_header_data(wr, &desc))
+		goto fail;
+
 	if (write_toc(wr, list, cmp_toc))
 		goto fail;
 
@@ -139,11 +156,14 @@ static int cmd_pack(int argc, char **argv)
 
 	pkg_writer_close(wr);
 	image_entry_free_list(list);
+	desc_free(&desc);
 	return EXIT_SUCCESS;
 fail:
 	pkg_writer_close(wr);
 fail_fp:
 	image_entry_free_list(list);
+fail_desc:
+	desc_free(&desc);
 	return EXIT_FAILURE;
 }
 

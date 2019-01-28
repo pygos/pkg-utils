@@ -81,30 +81,47 @@ static int flush_to_file(pkg_writer_t *wr)
 pkg_writer_t *pkg_writer_open(const char *path)
 {
 	pkg_writer_t *wr = calloc(1, sizeof(*wr));
+	compressor_t *cmp;
+
+	cmp = compressor_by_id(PKG_COMPRESSION_NONE);
+	if (cmp == NULL) {
+		fputs("missing built in dummy compessor\n", stderr);
+		return NULL;
+	}
 
 	if (wr == NULL) {
 		fputs("out of memory\n", stderr);
 		return NULL;
 	}
 
+	wr->stream = cmp->compression_stream(cmp);
+	if (wr->stream == NULL) {
+		fputs("error creating compressor stream for package header\n",
+		      stderr);
+		goto fail;
+	}
+
 	wr->fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0644);
 	if (wr->fd == -1) {
 		perror(path);
-		free(wr);
-		return NULL;
+		goto fail_stream;
 	}
 
 	wr->path = path;
 
 	wr->current.magic = PKG_MAGIC_HEADER;
 	wr->current.compression = PKG_COMPRESSION_NONE;
-	if (write_header(wr)) {
-		close(wr->fd);
-		free(wr);
-		return NULL;
-	}
+	if (write_header(wr))
+		goto fail_close;
 
 	return wr;
+fail_close:
+	close(wr->fd);
+fail_stream:
+	wr->stream->destroy(wr->stream);
+fail:
+	free(wr);
+	return NULL;
 }
 
 void pkg_writer_close(pkg_writer_t *wr)

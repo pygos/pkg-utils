@@ -25,7 +25,8 @@ EXTRA_DIST = autogen.sh
 pkg_SOURCES += main/cmd/pack/filelist.c main/cmd/pack/filelist_read.c
 pkg_SOURCES += main/cmd/pack/write_toc.c main/cmd/pack/write_files.c
 pkg_SOURCES += main/cmd/pack/pack.h main/cmd/pack/pack.c
-pkg_SOURCES += main/cmd/pack/input_file.c
+pkg_SOURCES += main/cmd/pack/input_file.c main/cmd/pack/desc.c
+pkg_SOURCES += main/cmd/pack/write_hdr.c
 
 # dump command
 pkg_SOURCES += main/cmd/dump/dump.c main/cmd/dump/dump.h main/cmd/dump/dump_toc.c

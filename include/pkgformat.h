@@ -18,6 +18,10 @@ typedef enum {
 	PKG_COMPRESSION_LZMA = 2,
 } PKG_COMPRESSION;
 
+typedef enum {
+	PKG_DEPENDENCY_REQUIRES = 0,
+} PKG_DEPENDENCY_TYPE;
+
 typedef struct {
 	uint32_t magic;
 	uint8_t compression;
@@ -53,5 +57,16 @@ typedef struct {
 	uint32_t id;
 	/* uint8_t data[]; */
 } file_data_t;
+
+typedef struct {
+	uint16_t num_depends;
+	/* pkg_dependency_t depends[]; */
+} pkg_header_t;
+
+typedef struct {
+	uint8_t type;
+	uint8_t name_length;
+	/* uint8_t name[]; */
+} pkg_dependency_t;
 
 #endif /* PKG_FORMAT_H */
