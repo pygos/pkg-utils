@@ -1,4 +1,11 @@
-#include "unpack.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <alloca.h>
+#include <stdio.h>
+#include <errno.h>
+
+#include "util.h"
 
 int mkdir_p(const char *path)
 {

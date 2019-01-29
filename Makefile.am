@@ -10,6 +10,7 @@ GLOBALHDR += include/image_entry.h
 
 MAIN = main/pkg.c main/util.c main/compressor.c main/command.c main/pkgreader.c
 MAIN += main/pkgwriter.c main/image_entry.c main/image_entry_sort.c
+MAIN += main/mkdir_p.c
 
 pkg_SOURCES = $(GLOBALHDR) $(MAIN)
 pkg_CFLAGS = $(AM_CFLAGS)
@@ -34,7 +35,7 @@ pkg_SOURCES += main/cmd/dump/dump_header.c
 
 # unpack command
 pkg_SOURCES += main/cmd/unpack/unpack.c main/cmd/unpack/unpack.h
-pkg_SOURCES += main/cmd/unpack/mkdir_p.c main/cmd/unpack/create_hierarchy.c
+pkg_SOURCES += main/cmd/unpack/create_hierarchy.c
 
 # help command
 pkg_SOURCES += main/cmd/help.c
