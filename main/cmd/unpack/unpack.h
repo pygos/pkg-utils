@@ -22,8 +22,8 @@ enum {
 	FLAG_NO_CHMOD = 0x02,
 };
 
-int create_hierarchy(int dirfd, image_entry_t *list);
-
 int mkdir_p(const char *path);
+
+int pkg_unpack(int rootfd, int flags, pkg_reader_t *rd);
 
 #endif /* UNPACK_H */

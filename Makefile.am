@@ -35,7 +35,7 @@ pkg_SOURCES += main/cmd/dump/dump_header.c
 
 # unpack command
 pkg_SOURCES += main/cmd/unpack/unpack.c main/cmd/unpack/unpack.h
-pkg_SOURCES += main/cmd/unpack/create_hierarchy.c
+pkg_SOURCES += main/cmd/unpack/pkg_unpack.c
 
 # help command
 pkg_SOURCES += main/cmd/help.c
