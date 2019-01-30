@@ -95,8 +95,10 @@ int desc_read(const char *path, pkg_desc_t *desc)
 			goto fail;
 	}
 
+	cleanup_file(&f);
 	return 0;
 fail:
+	cleanup_file(&f);
 	return -1;
 }
 
