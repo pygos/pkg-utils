@@ -10,7 +10,7 @@ GLOBALHDR += include/image_entry.h include/pkgio.h
 
 MAIN = main/pkg.c main/util.c main/compressor.c main/command.c main/pkgreader.c
 MAIN += main/pkgwriter.c main/image_entry.c main/image_entry_sort.c
-MAIN += main/mkdir_p.c main/pkgio_rd_image_entry.c
+MAIN += main/mkdir_p.c main/pkgio_rd_image_entry.c main/pkg_unpack.c
 
 pkg_SOURCES = $(GLOBALHDR) $(MAIN)
 pkg_CFLAGS = $(AM_CFLAGS)
@@ -35,7 +35,6 @@ pkg_SOURCES += main/cmd/dump/dump_header.c
 
 # unpack command
 pkg_SOURCES += main/cmd/unpack/unpack.c main/cmd/unpack/unpack.h
-pkg_SOURCES += main/cmd/unpack/pkg_unpack.c
 
 # help command
 pkg_SOURCES += main/cmd/help.c
