@@ -5,11 +5,11 @@ static const struct option long_opts[] = {
 	{ "file-compressor", required_argument, NULL, 'f' },
 	{ "description", required_argument, NULL, 'd' },
 	{ "file-list", required_argument, NULL, 'l' },
-	{ "output", required_argument, NULL, 'o' },
+	{ "repo-dir", required_argument, NULL, 'r' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "t:f:l:o:d:";
+static const char *short_opts = "t:f:l:r:d:";
 
 static compressor_t *get_default_compressor(void)
 {
@@ -60,9 +60,22 @@ static int alloc_file_ids(image_entry_t *list)
 	return 0;
 }
 
+static pkg_writer_t *open_writer(pkg_desc_t *desc, const char *repodir)
+{
+	char *path;
+
+	if (mkdir_p(repodir))
+		return NULL;
+
+	path = alloca(strlen(repodir) + strlen(desc->name) + 16);
+	sprintf(path, "%s/%s.pkg", repodir, desc->name);
+
+	return pkg_writer_open(path);
+}
+
 static int cmd_pack(int argc, char **argv)
 {
-	const char *filelist = NULL, *filename = NULL, *descfile = NULL;
+	const char *filelist = NULL, *repodir = NULL, *descfile = NULL;
 	compressor_t *cmp_toc, *cmp_files;
 	image_entry_t *list;
 	pkg_writer_t *wr;
@@ -96,11 +109,11 @@ static int cmd_pack(int argc, char **argv)
 		case 'l':
 			filelist = optarg;
 			break;
-		case 'o':
-			filename = optarg;
-			break;
 		case 'd':
 			descfile = optarg;
+			break;
+		case 'r':
+			repodir = optarg;
 			break;
 		default:
 			tell_read_help(argv[0]);
@@ -114,8 +127,8 @@ static int cmd_pack(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (filename == NULL) {
-		fputs("missing argument: output package file\n", stderr);
+	if (repodir == NULL) {
+		fputs("missing argument: repository directory\n", stderr);
 		tell_read_help(argv[0]);
 		return EXIT_FAILURE;
 	}
@@ -141,7 +154,7 @@ static int cmd_pack(int argc, char **argv)
 	if (alloc_file_ids(list))
 		goto fail_fp;
 
-	wr = pkg_writer_open(filename);
+	wr = open_writer(&desc, repodir);
 	if (wr == NULL)
 		goto fail_fp;
 
@@ -175,7 +188,8 @@ static command_t pack = {
 "Read a list of files from the given lists file and generate a package.\n"
 "Possible options:\n"
 "  --file-list, -l <path>  Specify a file containing a list of input files.\n"
-"  --output, -o <path>     Specify the path of the resulting package file.\n"
+"  --repo-dir, -r <path>   Specify the output repository path to store the\n"
+"                          package in.\n"
 "\n"
 "  --toc-compressor, -t <compressor>\n"
 "  --file-compressor, -f <compressor>\n"

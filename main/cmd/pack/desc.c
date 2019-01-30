@@ -41,11 +41,29 @@ static int handle_requires(input_file_t *f, pkg_desc_t *desc)
 	return 0;
 }
 
+static int handle_name(input_file_t *f, pkg_desc_t *desc)
+{
+	if (desc->name != NULL) {
+		fprintf(stderr, "%s: %zu: name redefined\n",
+			f->filename, f->linenum);
+		return -1;
+	}
+
+	desc->name = strdup(f->line);
+	if (desc->name == NULL) {
+		fputs("out of memory\n", stderr);
+		return -1;
+	}
+
+	return 0;
+}
+
 static const struct {
 	const char *name;
 	int (*handle)(input_file_t *f, pkg_desc_t *desc);
 } line_hooks[] = {
 	{ "requires", handle_requires },
+	{ "name", handle_name },
 };
 
 #define NUM_LINE_HOOKS (sizeof(line_hooks) / sizeof(line_hooks[0]))
@@ -95,6 +113,11 @@ int desc_read(const char *path, pkg_desc_t *desc)
 			goto fail;
 	}
 
+	if (desc->name == NULL) {
+		fprintf(stderr, "%s: no name given in package description\n",
+			f.filename);
+	}
+
 	cleanup_file(&f);
 	return 0;
 fail:
@@ -112,4 +135,6 @@ void desc_free(pkg_desc_t *desc)
 
 		free(dep);
 	}
+
+	free(desc->name);
 }

@@ -36,6 +36,7 @@ typedef struct dependency_t {
 
 typedef struct {
 	dependency_t *deps;
+	char *name;
 } pkg_desc_t;
 
 image_entry_t *filelist_mkdir(input_file_t *f);
