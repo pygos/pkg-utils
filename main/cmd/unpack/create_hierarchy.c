@@ -1,12 +1,12 @@
 #include "unpack.h"
 
-int create_hierarchy(image_entry_t *list)
+int create_hierarchy(int dirfd, image_entry_t *list)
 {
 	image_entry_t *ent;
 
 	for (ent = list; ent != NULL; ent = ent->next) {
 		if (S_ISDIR(ent->mode)) {
-			if (mkdir(ent->name, 0755)) {
+			if (mkdirat(dirfd, ent->name, 0755)) {
 				perror(ent->name);
 				return -1;
 			}
@@ -15,7 +15,8 @@ int create_hierarchy(image_entry_t *list)
 
 	for (ent = list; ent != NULL; ent = ent->next) {
 		if (S_ISLNK(ent->mode)) {
-			if (symlink(ent->data.symlink.target, ent->name)) {
+			if (symlinkat(ent->data.symlink.target,
+				      dirfd, ent->name)) {
 				perror(ent->name);
 				return -1;
 			}

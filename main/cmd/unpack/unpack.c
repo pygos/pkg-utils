@@ -10,19 +10,6 @@ static const struct option long_opts[] = {
 
 static const char *short_opts = "r:om";
 
-static int set_root(const char *path)
-{
-	if (mkdir_p(path))
-		return -1;
-
-	if (chdir(path)) {
-		fprintf(stderr, "cd %s: %s\n", path, strerror(errno));
-		return -1;
-	}
-
-	return 0;
-}
-
 static image_entry_t *get_file_entry(image_entry_t *list, uint32_t id)
 {
 	while (list != NULL) {
@@ -35,7 +22,7 @@ static image_entry_t *get_file_entry(image_entry_t *list, uint32_t id)
 	return NULL;
 }
 
-static int unpack_files(image_entry_t *list, pkg_reader_t *rd)
+static int unpack_files(int dirfd, image_entry_t *list, pkg_reader_t *rd)
 {
 	uint8_t buffer[2048];
 	image_entry_t *meta;
@@ -64,7 +51,8 @@ static int unpack_files(image_entry_t *list, pkg_reader_t *rd)
 			return -1;
 		}
 
-		fd = open(meta->name, O_WRONLY | O_CREAT | O_EXCL, 0644);
+		fd = openat(dirfd, meta->name, O_WRONLY | O_CREAT | O_EXCL,
+			    0644);
 		if (fd < 0) {
 			perror(meta->name);
 			return -1;
@@ -110,7 +98,7 @@ fail_trunc:
 	return -1;
 }
 
-static int change_permissions(image_entry_t *list, int flags)
+static int change_permissions(int dirfd, image_entry_t *list, int flags)
 {
 	while (list != NULL) {
 		if (S_ISLNK(list->mode)) {
@@ -118,8 +106,9 @@ static int change_permissions(image_entry_t *list, int flags)
 			continue;
 		}
 
-		if (!(flags & FLAG_NO_CHMOD)) {
-			if (chmod(list->name, list->mode)) {
+		if (!(flags & FLAG_NO_CHMOD) && !S_ISLNK(list->mode)) {
+			if (fchmodat(dirfd, list->name,
+				     list->mode & 07777, 0)) {
 				fprintf(stderr, "%s: chmod: %s\n", list->name,
 					strerror(errno));
 				return -1;
@@ -127,7 +116,8 @@ static int change_permissions(image_entry_t *list, int flags)
 		}
 
 		if (!(flags & FLAG_NO_CHOWN)) {
-			if (chown(list->name, list->uid, list->gid)) {
+			if (fchownat(dirfd, list->name, list->uid, list->gid,
+				     AT_SYMLINK_NOFOLLOW)) {
 				fprintf(stderr, "%s: chown: %s\n", list->name,
 					strerror(errno));
 				return -1;
@@ -143,8 +133,8 @@ static int change_permissions(image_entry_t *list, int flags)
 static int cmd_unpack(int argc, char **argv)
 {
 	const char *root = NULL, *filename;
+	int i, rootfd, ret, flags = 0;
 	image_entry_t *list = NULL;
-	int i, ret, flags = 0;
 	pkg_reader_t *rd;
 	record_t *hdr;
 
@@ -179,14 +169,27 @@ static int cmd_unpack(int argc, char **argv)
 	if (optind < argc)
 		fputs("warning: ignoring extra arguments\n", stderr);
 
+	if (root == NULL) {
+		rootfd = AT_FDCWD;
+	} else {
+		if (mkdir_p(root))
+			return EXIT_FAILURE;
+
+		rootfd = open(root, O_RDONLY | O_DIRECTORY);
+		if (rootfd < 0) {
+			perror(root);
+			return EXIT_FAILURE;
+		}
+	}
+
 	rd = pkg_reader_open(filename);
 	if (rd == NULL)
-		return EXIT_FAILURE;
+		goto fail_rootfd;
 
 	list = image_entry_list_from_package(rd);
 	if (list == NULL) {
 		pkg_reader_close(rd);
-		return EXIT_FAILURE;
+		goto fail_rootfd;
 	}
 
 	list = image_entry_sort(list);
@@ -194,10 +197,7 @@ static int cmd_unpack(int argc, char **argv)
 	if (pkg_reader_rewind(rd))
 		goto fail;
 
-	if (root != NULL && set_root(root) != 0)
-		goto fail;
-
-	if (create_hierarchy(list))
+	if (create_hierarchy(rootfd, list))
 		goto fail;
 
 	for (;;) {
@@ -210,20 +210,25 @@ static int cmd_unpack(int argc, char **argv)
 		hdr = pkg_reader_current_record_header(rd);
 
 		if (hdr->magic == PKG_MAGIC_DATA) {
-			if (unpack_files(list, rd))
+			if (unpack_files(rootfd, list, rd))
 				goto fail;
 		}
 	}
 
-	if (change_permissions(list, flags))
+	if (change_permissions(rootfd, list, flags))
 		goto fail;
 
 	image_entry_free_list(list);
 	pkg_reader_close(rd);
+	if (rootfd != AT_FDCWD)
+		close(rootfd);
 	return EXIT_SUCCESS;
 fail:
 	image_entry_free_list(list);
 	pkg_reader_close(rd);
+fail_rootfd:
+	if (rootfd != AT_FDCWD)
+		close(rootfd);
 	return EXIT_FAILURE;
 }
 
