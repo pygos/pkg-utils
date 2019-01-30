@@ -11,6 +11,7 @@
 #include "pkgformat.h"
 #include "pkgreader.h"
 #include "command.h"
+#include "pkgio.h"
 #include "util.h"
 
 typedef enum {

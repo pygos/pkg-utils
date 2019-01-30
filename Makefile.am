@@ -6,11 +6,11 @@ AM_CFLAGS = $(WARN_CFLAGS)
 # application core
 GLOBALHDR = include/pkgformat.h include/util.h include/pkgreader.h
 GLOBALHDR += include/compressor.h include/command.h include/pkgwriter.h
-GLOBALHDR += include/image_entry.h
+GLOBALHDR += include/image_entry.h include/pkgio.h
 
 MAIN = main/pkg.c main/util.c main/compressor.c main/command.c main/pkgreader.c
 MAIN += main/pkgwriter.c main/image_entry.c main/image_entry_sort.c
-MAIN += main/mkdir_p.c
+MAIN += main/mkdir_p.c main/pkgio_rd_image_entry.c
 
 pkg_SOURCES = $(GLOBALHDR) $(MAIN)
 pkg_CFLAGS = $(AM_CFLAGS)

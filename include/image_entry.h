@@ -30,8 +30,6 @@ void image_entry_free(image_entry_t *ent);
 
 void image_entry_free_list(image_entry_t *list);
 
-image_entry_t *image_entry_list_from_package(pkg_reader_t *pkg);
-
 image_entry_t *image_entry_sort(image_entry_t *list);
 
 #endif /* IMAGE_ENTRY_H */

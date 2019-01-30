@@ -14,6 +14,7 @@
 #include "image_entry.h"
 #include "pkgreader.h"
 #include "command.h"
+#include "pkgio.h"
 #include "util.h"
 
 enum {
