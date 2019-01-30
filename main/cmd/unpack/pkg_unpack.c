@@ -122,7 +122,7 @@ static int change_permissions(int dirfd, image_entry_t *list, int flags)
 			continue;
 		}
 
-		if (!(flags & FLAG_NO_CHMOD) && !S_ISLNK(list->mode)) {
+		if (!(flags & UNPACK_NO_CHMOD) && !S_ISLNK(list->mode)) {
 			if (fchmodat(dirfd, list->name,
 				     list->mode & 07777, 0)) {
 				fprintf(stderr, "%s: chmod: %s\n", list->name,
@@ -131,7 +131,7 @@ static int change_permissions(int dirfd, image_entry_t *list, int flags)
 			}
 		}
 
-		if (!(flags & FLAG_NO_CHOWN)) {
+		if (!(flags & UNPACK_NO_CHOWN)) {
 			if (fchownat(dirfd, list->name, list->uid, list->gid,
 				     AT_SYMLINK_NOFOLLOW)) {
 				fprintf(stderr, "%s: chown: %s\n", list->name,

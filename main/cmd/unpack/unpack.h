@@ -18,8 +18,8 @@
 #include "util.h"
 
 enum {
-	FLAG_NO_CHOWN = 0x01,
-	FLAG_NO_CHMOD = 0x02,
+	UNPACK_NO_CHOWN = 0x01,
+	UNPACK_NO_CHMOD = 0x02,
 };
 
 int mkdir_p(const char *path);

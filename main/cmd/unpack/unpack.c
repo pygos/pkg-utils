@@ -26,10 +26,10 @@ static int cmd_unpack(int argc, char **argv)
 			root = optarg;
 			break;
 		case 'o':
-			flags |= FLAG_NO_CHOWN;
+			flags |= UNPACK_NO_CHOWN;
 			break;
 		case 'm':
-			flags |= FLAG_NO_CHMOD;
+			flags |= UNPACK_NO_CHMOD;
 			break;
 		default:
 			tell_read_help(argv[0]);
