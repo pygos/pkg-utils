@@ -160,12 +160,26 @@ int filelist_mkfile(input_file_t *f, void *obj)
 {
 	image_entry_t *ent = filelist_mkentry(f, S_IFREG);
 	image_entry_t **listptr = obj;
+	const char *ptr;
 	struct stat sb;
 
 	if (ent == NULL)
 		return -1;
 
-	ent->data.file.location = strdup(f->line);
+	if (f->line[0] == '\0') {
+		ptr = strrchr(f->filename, '/');
+
+		if (ptr == NULL) {
+			ent->data.file.location = strdup(ent->name);
+		} else {
+			asprintf(&ent->data.file.location, "%.*s/%s",
+				 (int)(ptr - f->filename), f->filename,
+				 ent->name);
+		}
+	} else {
+		ent->data.file.location = strdup(f->line);
+	}
+
 	if (ent->data.file.location == NULL) {
 		oom(f);
 		goto fail;
