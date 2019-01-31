@@ -7,14 +7,9 @@ static char *skipspace(char *str)
 	return str;
 }
 
-static void complain(const input_file_t *f, const char *msg)
-{
-	fprintf(stderr, "%s: %zu: %s\n", f->filename, f->linenum, msg);
-}
-
 static void oom(input_file_t *f)
 {
-	complain(f, "out of memory");
+	input_file_complain(f, "out of memory");
 }
 
 static image_entry_t *filelist_mkentry(input_file_t *f, mode_t filetype)
@@ -34,7 +29,7 @@ static image_entry_t *filelist_mkentry(input_file_t *f, mode_t filetype)
 		;
 
 	if (!isspace(line[i])) {
-		complain(f, "expected space after file name");
+		input_file_complain(f, "expected space after file name");
 		goto fail;
 	}
 
@@ -46,17 +41,17 @@ static image_entry_t *filelist_mkentry(input_file_t *f, mode_t filetype)
 
 	memcpy(ent->name, line, i);
 	if (canonicalize_name(ent->name)) {
-		complain(f, "invalid file name");
+		input_file_complain(f, "invalid file name");
 		goto fail;
 	}
 
 	if (ent->name[0] == '\0') {
-		complain(f, "refusing to add entry for '/'");
+		input_file_complain(f, "refusing to add entry for '/'");
 		goto fail;
 	}
 
 	if (strlen(ent->name) > 0xFFFF) {
-		complain(f, "name too long");
+		input_file_complain(f, "name too long");
 		goto fail;
 	}
 
@@ -64,20 +59,20 @@ static image_entry_t *filelist_mkentry(input_file_t *f, mode_t filetype)
 
 	/* mode */
 	if (!isdigit(*line)) {
-		complain(f, "expected numeric mode after file name");
+		input_file_complain(f, "expected numeric mode after file name");
 		goto fail;
 	}
 
 	while (isdigit(*line)) {
 		if (*line > '7') {
-			complain(f, "mode must be octal number");
+			input_file_complain(f, "mode must be octal number");
 			goto fail;
 		}
 		ent->mode = (ent->mode << 3) | (*(line++) - '0');
 	}
 
 	if (!isspace(*line)) {
-		complain(f, "expected space after file mode");
+		input_file_complain(f, "expected space after file mode");
 		goto fail;
 	}
 
@@ -87,7 +82,7 @@ static image_entry_t *filelist_mkentry(input_file_t *f, mode_t filetype)
 
 	/* uid */
 	if (!isdigit(*line)) {
-		complain(f, "expected numeric UID after mode");
+		input_file_complain(f, "expected numeric UID after mode");
 		goto fail;
 	}
 
@@ -95,7 +90,7 @@ static image_entry_t *filelist_mkentry(input_file_t *f, mode_t filetype)
 		ent->uid = (ent->uid * 10) + (*(line++) - '0');
 
 	if (!isspace(*line)) {
-		complain(f, "expected space after UID");
+		input_file_complain(f, "expected space after UID");
 		goto fail;
 	}
 
@@ -103,7 +98,7 @@ static image_entry_t *filelist_mkentry(input_file_t *f, mode_t filetype)
 
 	/* gid */
 	if (!isdigit(*line)) {
-		complain(f, "expected numeric GID after UID");
+		input_file_complain(f, "expected numeric GID after UID");
 		goto fail;
 	}
 
@@ -121,17 +116,26 @@ fail:
 	return NULL;
 }
 
-image_entry_t *filelist_mkdir(input_file_t *f)
+int filelist_mkdir(input_file_t *f, void *obj)
 {
-	return filelist_mkentry(f, S_IFDIR);
-}
-
-image_entry_t *filelist_mkslink(input_file_t *f)
-{
-	image_entry_t *ent = filelist_mkentry(f, S_IFLNK);
+	image_entry_t *ent = filelist_mkentry(f, S_IFDIR);
+	image_entry_t **listptr = obj;
 
 	if (ent == NULL)
-		return NULL;
+		return -1;
+
+	ent->next = *listptr;
+	*listptr = ent;
+	return 0;
+}
+
+int filelist_mkslink(input_file_t *f, void *obj)
+{
+	image_entry_t *ent = filelist_mkentry(f, S_IFLNK);
+	image_entry_t **listptr = obj;
+
+	if (ent == NULL)
+		return -1;
 
 	ent->data.symlink.target = strdup(f->line);
 	if (ent->data.symlink.target == NULL) {
@@ -140,23 +144,26 @@ image_entry_t *filelist_mkslink(input_file_t *f)
 	}
 
 	if (strlen(ent->data.symlink.target) > 0xFFFF) {
-		complain(f, "symlink target too long");
+		input_file_complain(f, "symlink target too long");
 		goto fail;
 	}
 
-	return ent;
+	ent->next = *listptr;
+	*listptr = ent;
+	return 0;
 fail:
 	image_entry_free(ent);
-	return NULL;
+	return -1;
 }
 
-image_entry_t *filelist_mkfile(input_file_t *f)
+int filelist_mkfile(input_file_t *f, void *obj)
 {
 	image_entry_t *ent = filelist_mkentry(f, S_IFREG);
+	image_entry_t **listptr = obj;
 	struct stat sb;
 
 	if (ent == NULL)
-		return NULL;
+		return -1;
 
 	ent->data.file.location = strdup(f->line);
 	if (ent->data.file.location == NULL) {
@@ -171,13 +178,49 @@ image_entry_t *filelist_mkfile(input_file_t *f)
 
 	if (sizeof(off_t) > sizeof(uint64_t) &&
 	    sb.st_size > (off_t)(~((uint64_t)0))) {
-		complain(f, "input file is too big");
+		input_file_complain(f, "input file is too big");
 		goto fail;
 	}
 
 	ent->data.file.size = sb.st_size;
-	return ent;
+
+	ent->next = *listptr;
+	*listptr = ent;
+	return 0;
 fail:
 	image_entry_free(ent);
+	return -1;
+}
+
+static const keyword_handler_t line_hooks[] = {
+	{ "file", filelist_mkfile },
+	{ "dir", filelist_mkdir },
+	{ "slink", filelist_mkslink },
+};
+
+#define NUM_LINE_HOOKS (sizeof(line_hooks) / sizeof(line_hooks[0]))
+
+image_entry_t *filelist_read(const char *filename)
+{
+	image_entry_t *list = NULL;
+	input_file_t f;
+
+	if (open_file(&f, filename))
+		return NULL;
+
+	if (process_file(&f, line_hooks, NUM_LINE_HOOKS, &list))
+		goto fail;
+
+	if (list == NULL) {
+		fprintf(stderr, "%s: does not contain any entries\n",
+			f.filename);
+		goto fail;
+	}
+
+	cleanup_file(&f);
+	return list;
+fail:
+	cleanup_file(&f);
+	image_entry_free_list(list);
 	return NULL;
 }

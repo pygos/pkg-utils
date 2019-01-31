@@ -33,11 +33,11 @@ typedef struct {
 	char *name;
 } pkg_desc_t;
 
-image_entry_t *filelist_mkdir(input_file_t *f);
+int filelist_mkdir(input_file_t *f, void *obj);
 
-image_entry_t *filelist_mkslink(input_file_t *f);
+int filelist_mkslink(input_file_t *f, void *obj);
 
-image_entry_t *filelist_mkfile(input_file_t *f);
+int filelist_mkfile(input_file_t *f, void *obj);
 
 image_entry_t *filelist_read(const char *filename);
 

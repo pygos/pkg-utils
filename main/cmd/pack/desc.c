@@ -1,8 +1,9 @@
 #include "pack.h"
 
-static int handle_requires(input_file_t *f, pkg_desc_t *desc)
+static int handle_requires(input_file_t *f, void *obj)
 {
 	char *ptr = f->line, *end;
+	pkg_desc_t *desc = obj;
 	dependency_t *dep;
 	size_t len;
 
@@ -18,15 +19,13 @@ static int handle_requires(input_file_t *f, pkg_desc_t *desc)
 			break;
 
 		if (len > 0xFF) {
-			fprintf(stderr, "%s: %zu: dependency name too long\n",
-				f->filename, f->linenum);
+			input_file_complain(f, "dependency name too long");
 			return -1;
 		}
 
 		dep = calloc(1, sizeof(*dep) + len + 1);
 		if (dep == NULL) {
-			fprintf(stderr, "%s: %zu: out of memory\n",
-				f->filename, f->linenum);
+			input_file_complain(f, "out of memory");
 			return -1;
 		}
 
@@ -41,27 +40,25 @@ static int handle_requires(input_file_t *f, pkg_desc_t *desc)
 	return 0;
 }
 
-static int handle_name(input_file_t *f, pkg_desc_t *desc)
+static int handle_name(input_file_t *f, void *obj)
 {
+	pkg_desc_t *desc = obj;
+
 	if (desc->name != NULL) {
-		fprintf(stderr, "%s: %zu: name redefined\n",
-			f->filename, f->linenum);
+		input_file_complain(f, "name redefined");
 		return -1;
 	}
 
 	desc->name = strdup(f->line);
 	if (desc->name == NULL) {
-		fputs("out of memory\n", stderr);
+		input_file_complain(f, "out of memory");
 		return -1;
 	}
 
 	return 0;
 }
 
-static const struct {
-	const char *name;
-	int (*handle)(input_file_t *f, pkg_desc_t *desc);
-} line_hooks[] = {
+static const keyword_handler_t line_hooks[] = {
 	{ "requires", handle_requires },
 	{ "name", handle_name },
 };
@@ -71,58 +68,19 @@ static const struct {
 int desc_read(const char *path, pkg_desc_t *desc)
 {
 	input_file_t f;
-	size_t i, len;
-	char *ptr;
-	int ret;
 
 	memset(desc, 0, sizeof(*desc));
 
 	if (open_file(&f, path))
 		return -1;
 
-	for (;;) {
-		ret = prefetch_line(&f);
-		if (ret < 0)
-			goto fail;
-		if (ret > 0)
-			break;
-
-		ptr = f.line;
-
-		for (i = 0; i < NUM_LINE_HOOKS; ++i) {
-			len = strlen(line_hooks[i].name);
-
-			if (strncmp(ptr, line_hooks[i].name, len) != 0)
-				continue;
-			if (!isspace(ptr[len]) && ptr[len] != '\0')
-				continue;
-			for (ptr += len; isspace(*ptr); ++ptr)
-				;
-			memmove(f.line, ptr, strlen(ptr) + 1);
-			break;
-		}
-
-		if (i == NUM_LINE_HOOKS) {
-			fprintf(stderr, "%s: %zu: unknown description field\n",
-				f.filename, f.linenum);
-			goto fail;
-		}
-
-		ret = line_hooks[i].handle(&f, desc);
-		if (ret)
-			goto fail;
-	}
-
-	if (desc->name == NULL) {
-		fprintf(stderr, "%s: no name given in package description\n",
-			f.filename);
+	if (process_file(&f, line_hooks, NUM_LINE_HOOKS, desc)) {
+		cleanup_file(&f);
+		return -1;
 	}
 
 	cleanup_file(&f);
 	return 0;
-fail:
-	cleanup_file(&f);
-	return -1;
 }
 
 void desc_free(pkg_desc_t *desc)

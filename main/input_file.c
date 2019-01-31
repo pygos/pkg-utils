@@ -5,7 +5,7 @@
 
 #include "input_file.h"
 
-int prefetch_line(input_file_t *f)
+static int prefetch_line(input_file_t *f)
 {
 	char *line, *ptr;
 	ssize_t ret;
@@ -73,6 +73,53 @@ int open_file(input_file_t *f, const char *filename)
 	if (f->f == NULL) {
 		perror(f->filename);
 		return -1;
+	}
+
+	return 0;
+}
+
+void input_file_complain(const input_file_t *f, const char *msg)
+{
+	fprintf(stderr, "%s: %zu: %s\n", f->filename, f->linenum, msg);
+}
+
+int process_file(input_file_t *f, const keyword_handler_t *handlers,
+		 size_t count, void *obj)
+{
+	size_t i, len;
+	char *ptr;
+	int ret;
+
+	for (;;) {
+		ret = prefetch_line(f);
+		if (ret < 0)
+			return -1;
+		if (ret > 0)
+			break;
+
+		ptr = f->line;
+
+		for (i = 0; i < count; ++i) {
+			len = strlen(handlers[i].name);
+
+			if (strncmp(ptr, handlers[i].name, len) != 0)
+				continue;
+			if (!isspace(ptr[len]) && ptr[len] != '\0')
+				continue;
+			for (ptr += len; isspace(*ptr); ++ptr)
+				;
+			memmove(f->line, ptr, strlen(ptr) + 1);
+			break;
+		}
+
+		if (i == count) {
+			fprintf(stderr, "%s: %zu: unknown keyword\n",
+				f->filename, f->linenum);
+			return -1;
+		}
+
+		if (handlers[i].handle(f, obj))
+			return -1;
 	}
 
 	return 0;
