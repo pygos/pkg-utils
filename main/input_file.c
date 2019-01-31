@@ -1,4 +1,9 @@
-#include "pack.h"
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <ctype.h>
+
+#include "input_file.h"
 
 int prefetch_line(input_file_t *f)
 {

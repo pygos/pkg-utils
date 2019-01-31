@@ -6,11 +6,12 @@ AM_CFLAGS = $(WARN_CFLAGS)
 # application core
 GLOBALHDR = include/pkgformat.h include/util.h include/pkgreader.h
 GLOBALHDR += include/compressor.h include/command.h include/pkgwriter.h
-GLOBALHDR += include/image_entry.h include/pkgio.h
+GLOBALHDR += include/image_entry.h include/pkgio.h include/input_file.h
 
 MAIN = main/pkg.c main/util.c main/compressor.c main/command.c main/pkgreader.c
 MAIN += main/pkgwriter.c main/image_entry.c main/image_entry_sort.c
 MAIN += main/mkdir_p.c main/pkgio_rd_image_entry.c main/pkg_unpack.c
+MAIN += main/input_file.c
 
 pkg_SOURCES = $(GLOBALHDR) $(MAIN)
 pkg_CFLAGS = $(AM_CFLAGS)
@@ -26,8 +27,7 @@ EXTRA_DIST = autogen.sh
 pkg_SOURCES += main/cmd/pack/filelist.c main/cmd/pack/filelist_read.c
 pkg_SOURCES += main/cmd/pack/write_toc.c main/cmd/pack/write_files.c
 pkg_SOURCES += main/cmd/pack/pack.h main/cmd/pack/pack.c
-pkg_SOURCES += main/cmd/pack/input_file.c main/cmd/pack/desc.c
-pkg_SOURCES += main/cmd/pack/write_hdr.c
+pkg_SOURCES += main/cmd/pack/desc.c main/cmd/pack/write_hdr.c
 
 # dump command
 pkg_SOURCES += main/cmd/dump/dump.c main/cmd/dump/dump.h main/cmd/dump/dump_toc.c

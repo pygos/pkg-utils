@@ -15,18 +15,12 @@
 #include <fcntl.h>
 
 #include "image_entry.h"
+#include "input_file.h"
 #include "compressor.h"
 #include "pkgformat.h"
 #include "pkgwriter.h"
 #include "command.h"
 #include "util.h"
-
-typedef struct {
-	FILE *f;
-	char *line;
-	const char *filename;
-	size_t linenum;
-} input_file_t;
 
 typedef struct dependency_t {
 	struct dependency_t *next;
@@ -50,12 +44,6 @@ image_entry_t *filelist_read(const char *filename);
 int write_toc(pkg_writer_t *wr, image_entry_t *list, compressor_t *cmp);
 
 int write_files(pkg_writer_t *wr, image_entry_t *list, compressor_t *cmp);
-
-int prefetch_line(input_file_t *f);
-
-void cleanup_file(input_file_t *f);
-
-int open_file(input_file_t *f, const char *filename);
 
 int desc_read(const char *path, pkg_desc_t *desc);
 
