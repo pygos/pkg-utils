@@ -40,6 +40,15 @@ retry:
 
 	if (ptr != f->line)
 		memmove(f->line, ptr, strlen(ptr) + 1);
+
+	ptr = f->line + strlen(f->line);
+
+	while (ptr > f->line && isspace(ptr[-1]))
+		--ptr;
+	*ptr = '\0';
+
+	if (f->line[0] == '\0')
+		goto retry;
 	return 0;
 }
 
