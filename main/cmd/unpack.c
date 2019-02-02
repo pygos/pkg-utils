@@ -96,7 +96,7 @@ static command_t unpack = {
 "a destination directory (default: current working directory).\n"
 "\n"
 "Possible options:\n"
-"  --root, -r <director>   A root directory to unpack the package. Defaults\n"
+"  --root, -r <directory>  A root directory to unpack the package. Defaults\n"
 "                          to the current working directory if not set.\n"
 "  --no-chown, -o          Do not change ownership of the extracted data.\n"
 "                          Keep the uid/gid of the user who runs the program.\n"
