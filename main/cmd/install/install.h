@@ -1,6 +1,7 @@
 #ifndef INSTALL_H
 #define INSTALL_H
 
+#include <stdbool.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,10 +9,17 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+#include "image_entry.h"
 #include "pkgreader.h"
 #include "command.h"
 #include "pkgio.h"
 #include "util.h"
+
+enum {
+	INSTALL_MODE_INSTALL = 0,
+	INSTALL_MODE_LIST_PKG,
+	INSTALL_MODE_LIST_FILES,
+};
 
 struct pkg_dep_node {
 	char *name;

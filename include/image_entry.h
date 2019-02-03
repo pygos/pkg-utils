@@ -26,10 +26,18 @@ typedef struct image_entry_t {
 	} data;
 } image_entry_t;
 
+typedef enum {
+	TOC_FORMAT_PRETTY = 0,
+	TOC_FORMAT_SQFS = 1,
+	TOC_FORMAT_INITRD = 2,
+} TOC_FORMAT;
+
 void image_entry_free(image_entry_t *ent);
 
 void image_entry_free_list(image_entry_t *list);
 
 image_entry_t *image_entry_sort(image_entry_t *list);
+
+int dump_toc(image_entry_t *list, const char *root, TOC_FORMAT format);
 
 #endif /* IMAGE_ENTRY_H */
