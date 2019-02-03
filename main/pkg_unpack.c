@@ -16,7 +16,10 @@ static int create_hierarchy(int dirfd, image_entry_t *list)
 	for (ent = list; ent != NULL; ent = ent->next) {
 		if (S_ISDIR(ent->mode)) {
 			if (mkdirat(dirfd, ent->name, 0755)) {
-				perror(ent->name);
+				if (errno == EEXIST)
+					continue;
+				fprintf(stderr, "mkdir %s: %s\n", ent->name,
+					strerror(errno));
 				return -1;
 			}
 		}
@@ -26,7 +29,9 @@ static int create_hierarchy(int dirfd, image_entry_t *list)
 		if (S_ISLNK(ent->mode)) {
 			if (symlinkat(ent->data.symlink.target,
 				      dirfd, ent->name)) {
-				perror(ent->name);
+				fprintf(stderr, "symlink %s to %s: %s\n",
+					ent->name, ent->data.symlink.target,
+					strerror(errno));
 				return -1;
 			}
 		}
