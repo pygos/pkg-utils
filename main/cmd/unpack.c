@@ -11,8 +11,8 @@
 
 static const struct option long_opts[] = {
 	{ "root", required_argument, NULL, 'r' },
-	{ "no-chown", required_argument, NULL, 'o' },
-	{ "no-chmod", required_argument, NULL, 'm' },
+	{ "no-chown", no_argument, NULL, 'o' },
+	{ "no-chmod", no_argument, NULL, 'm' },
 	{ NULL, 0, NULL, 0 },
 };
 
