@@ -7,6 +7,8 @@ typedef struct pkg_reader_t pkg_reader_t;
 
 pkg_reader_t *pkg_reader_open(const char *path);
 
+pkg_reader_t *pkg_reader_open_repo(int dirfd, const char *name);
+
 void pkg_reader_close(pkg_reader_t *reader);
 
 int pkg_reader_get_next_record(pkg_reader_t *reader);

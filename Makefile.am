@@ -33,6 +33,11 @@ pkg_SOURCES += main/cmd/pack/desc.c main/cmd/pack/write_hdr.c
 pkg_SOURCES += main/cmd/dump/dump.c main/cmd/dump/dump.h main/cmd/dump/dump_toc.c
 pkg_SOURCES += main/cmd/dump/dump_header.c
 
+# install command
+pkg_SOURCES += main/cmd/install/collect.c main/cmd/install/install.c
+pkg_SOURCES += main/cmd/install/install.h main/cmd/install/pkglist.c
+pkg_SOURCES += main/cmd/install/tsort.c
+
 # unpack command
 pkg_SOURCES += main/cmd/unpack.c
 

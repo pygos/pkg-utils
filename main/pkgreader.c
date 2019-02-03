@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "util.h"
 #include "pkgreader.h"
@@ -118,7 +119,7 @@ fail_comp:
 	return -1;
 }
 
-pkg_reader_t *pkg_reader_open(const char *path)
+static pkg_reader_t *pkg_reader_openat(int dirfd, const char *path)
 {
 	pkg_reader_t *rd = calloc(1, sizeof(*rd));
 	int ret;
@@ -129,7 +130,7 @@ pkg_reader_t *pkg_reader_open(const char *path)
 	}
 
 	rd->path = path;
-	rd->fd = open(path, O_RDONLY);
+	rd->fd = openat(dirfd, path, O_RDONLY);
 	if (rd->fd < 0) {
 		perror(path);
 		free(rd);
@@ -148,6 +149,31 @@ fail_header:
 fail:
 	pkg_reader_close(rd);
 	return NULL;
+}
+
+pkg_reader_t *pkg_reader_open(const char *path)
+{
+	return pkg_reader_openat(AT_FDCWD, path);
+}
+
+pkg_reader_t *pkg_reader_open_repo(int dirfd, const char *name)
+{
+	char *fname;
+	size_t i;
+
+	for (i = 0; name[i] != '\0'; ++i) {
+		if (!isalnum(name[i]) && name[i] != '_' && name[i] != '-') {
+			fprintf(stderr,
+				"illegal characters in package name '%s'\n",
+				name);
+			return NULL;
+		}
+	}
+
+	fname = alloca(strlen(name) + 5);
+	sprintf(fname, "%s.pkg", name);
+
+	return pkg_reader_openat(dirfd, fname);
 }
 
 void pkg_reader_close(pkg_reader_t *rd)
