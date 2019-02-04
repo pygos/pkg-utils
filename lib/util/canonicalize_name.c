@@ -1,6 +1,4 @@
-#include <unistd.h>
 #include <string.h>
-#include <errno.h>
 
 #include "util/util.h"
 
@@ -54,48 +52,4 @@ int canonicalize_name(char *filename)
 	}
 
 	return 0;
-}
-
-ssize_t write_retry(int fd, void *data, size_t size)
-{
-	ssize_t ret, total = 0;
-
-	while (size > 0) {
-		ret = write(fd, data, size);
-		if (ret == 0)
-			break;
-		if (ret < 0) {
-			if (errno == EINTR)
-				continue;
-			return -1;
-		}
-
-		data = (char *)data + ret;
-		size -= ret;
-		total += ret;
-	}
-
-	return total;
-}
-
-ssize_t read_retry(int fd, void *buffer, size_t size)
-{
-	ssize_t ret, total = 0;
-
-	while (size > 0) {
-		ret = read(fd, buffer, size);
-		if (ret < 0) {
-			if (errno == EINTR)
-				continue;
-			return -1;
-		}
-		if (ret == 0)
-			break;
-
-		total += ret;
-		size -= ret;
-		buffer = (char *)buffer + ret;
-	}
-
-	return total;
 }

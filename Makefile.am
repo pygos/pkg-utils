@@ -4,7 +4,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -D_GNU_SOURCE
 AM_CFLAGS = $(WARN_CFLAGS)
 
 # helper libraries
-libutil_a_SOURCES = lib/util/input_file.c lib/util/mkdir_p.c lib/util/util.c
+libutil_a_SOURCES = lib/util/input_file.c lib/util/mkdir_p.c
+libutil_a_SOURCES += lib/util/write_retry.c lib/util/read_retry.c
+libutil_a_SOURCES += lib/util/canonicalize_name.c
 libutil_a_SOURCES += include/util/util.h include/util/input_file.h
 
 # application core
