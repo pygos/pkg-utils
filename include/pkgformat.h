@@ -54,6 +54,10 @@ typedef struct {
 } toc_file_extra_t;
 
 typedef struct {
+	uint64_t devno;
+} toc_device_extra_t;
+
+typedef struct {
 	uint32_t id;
 	/* uint8_t data[]; */
 } file_data_t;

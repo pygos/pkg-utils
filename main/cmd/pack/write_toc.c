@@ -48,6 +48,16 @@ static int write_entry(pkg_writer_t *wr, image_entry_t *it)
 	}
 	case S_IFDIR:
 		break;
+	case S_IFBLK:
+	case S_IFCHR: {
+		toc_device_extra_t dev;
+
+		dev.devno = htole64(it->data.device.devno);
+
+		if (pkg_writer_write_payload(wr, &dev, sizeof(dev)))
+			return -1;
+		break;
+	}
 	default:
 		assert(0);
 	}

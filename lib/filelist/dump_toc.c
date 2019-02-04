@@ -1,3 +1,4 @@
+#include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -31,6 +32,18 @@ static int print_pretty(image_entry_t *ent, const char *root)
 	case S_IFDIR:
 		fputs("directory\n\n", stdout);
 		break;
+	case S_IFCHR:
+		fputs("character device\n", stdout);
+		printf("\tmajor: %u\n\tminor: %u\n\n",
+		       major(ent->data.device.devno),
+		       minor(ent->data.device.devno));
+		break;
+	case S_IFBLK:
+		fputs("block device\n", stdout);
+		printf("\tmajor: %u\n\tminor: %u\n\n",
+		       major(ent->data.device.devno),
+		       minor(ent->data.device.devno));
+		break;
 	default:
 		fputs("unknown\n\n", stdout);
 		goto fail_type;
@@ -46,12 +59,32 @@ static int print_sqfs(image_entry_t *ent, const char *root)
 	mode_t mode = ent->mode & (~S_IFMT);
 	(void)root;
 
-	if ((ent->mode & S_IFMT) == S_IFLNK)
+	switch (ent->mode & S_IFMT) {
+	case S_IFCHR:
+		printf("%s c %o %u %u %u %u\n", ent->name, mode,
+		       (unsigned int)ent->uid, (unsigned int)ent->gid,
+		       major(ent->data.device.devno),
+		       minor(ent->data.device.devno));
+		break;
+	case S_IFBLK:
+		printf("%s b %o %u %u %u %u\n", ent->name, mode,
+		       (unsigned int)ent->uid, (unsigned int)ent->gid,
+		       major(ent->data.device.devno),
+		       minor(ent->data.device.devno));
+		break;
+	case S_IFLNK:
 		mode = 0777;
+		/* fall-through */
+	case S_IFDIR:
+	case S_IFREG:
+		printf("%s m %o %u %u\n", ent->name, mode,
+		       (unsigned int)ent->uid, (unsigned int)ent->gid);
+		break;
+	default:
+		fputs("unknown file type in table of contents\n", stderr);
+		return -1;
+	}
 
-	printf("%s m %o %u %u\n", ent->name, mode,
-	       (unsigned int)ent->uid,
-	       (unsigned int)ent->gid);
 	return 0;
 }
 
@@ -60,6 +93,18 @@ static int print_initrd(image_entry_t *ent, const char *root)
 	mode_t mode = ent->mode & (~S_IFMT);
 
 	switch (ent->mode & S_IFMT) {
+	case S_IFCHR:
+		printf("nod /%s 0%o %u %u c %u %u\n", ent->name, mode,
+		       (unsigned int)ent->uid, (unsigned int)ent->gid,
+		       major(ent->data.device.devno),
+		       minor(ent->data.device.devno));
+		return 0;
+	case S_IFBLK:
+		printf("nod /%s 0%o %u %u b %u %u\n", ent->name, mode,
+		       (unsigned int)ent->uid, (unsigned int)ent->gid,
+		       major(ent->data.device.devno),
+		       minor(ent->data.device.devno));
+		return 0;
 	case S_IFLNK:
 		printf("slink /%s %s", ent->name, ent->data.symlink.target);
 		mode = 0777;

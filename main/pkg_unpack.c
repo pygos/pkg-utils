@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -35,6 +36,20 @@ static int create_hierarchy(int dirfd, image_entry_t *list, int flags)
 				fprintf(stderr, "symlink %s to %s: %s\n",
 					ent->name, ent->data.symlink.target,
 					strerror(errno));
+				return -1;
+			}
+		}
+	}
+
+	for (ent = list; ent != NULL; ent = ent->next) {
+		if (S_ISBLK(ent->mode) || S_ISCHR(ent->mode)) {
+			if (flags & UNPACK_NO_DEVICES)
+				continue;
+
+			if (mknodat(dirfd, ent->name, ent->mode,
+				    ent->data.device.devno)) {
+				fprintf(stderr, "mknod %s: %s\n",
+					ent->name, strerror(errno));
 				return -1;
 			}
 		}
@@ -133,13 +148,29 @@ fail_trunc:
 
 static int change_permissions(int dirfd, image_entry_t *list, int flags)
 {
-	while (list != NULL) {
-		if (S_ISLNK(list->mode)) {
-			list = list->next;
-			continue;
+	bool do_chmod, do_chown;
+
+	for (; list != NULL; list = list->next) {
+		do_chmod = (flags & UNPACK_NO_CHMOD) == 0;
+		do_chown = (flags & UNPACK_NO_CHOWN) == 0;
+
+		switch (list->mode & S_IFMT) {
+		case S_IFLNK:
+			if (flags & UNPACK_NO_SYMLINKS)
+				continue;
+			do_chmod = false;
+			break;
+		case S_IFBLK:
+		case S_IFCHR:
+			if (flags & UNPACK_NO_DEVICES)
+				continue;
+			do_chmod = false;
+			break;
+		default:
+			break;
 		}
 
-		if (!(flags & UNPACK_NO_CHMOD) && !S_ISLNK(list->mode)) {
+		if (do_chmod) {
 			if (fchmodat(dirfd, list->name,
 				     list->mode & 07777, 0)) {
 				fprintf(stderr, "%s: chmod: %s\n", list->name,
@@ -148,7 +179,7 @@ static int change_permissions(int dirfd, image_entry_t *list, int flags)
 			}
 		}
 
-		if (!(flags & UNPACK_NO_CHOWN)) {
+		if (do_chown) {
 			if (fchownat(dirfd, list->name, list->uid, list->gid,
 				     AT_SYMLINK_NOFOLLOW)) {
 				fprintf(stderr, "%s: chown: %s\n", list->name,
@@ -156,8 +187,6 @@ static int change_permissions(int dirfd, image_entry_t *list, int flags)
 				return -1;
 			}
 		}
-
-		list = list->next;
 	}
 
 	return 0;

@@ -21,6 +21,10 @@ typedef struct image_entry_t {
 		struct {
 			char *target;
 		} symlink;
+
+		struct {
+			dev_t devno;
+		} device;
 	} data;
 } image_entry_t;
 

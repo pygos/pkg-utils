@@ -52,6 +52,20 @@ static int read_extra(pkg_reader_t *pkg, image_entry_t *ent)
 	}
 	case S_IFDIR:
 		break;
+	case S_IFBLK:
+	case S_IFCHR: {
+		toc_device_extra_t extra;
+		int ret;
+
+		ret = pkg_reader_read_payload(pkg, &extra, sizeof(extra));
+		if (ret < 0)
+			return -1;
+		if ((size_t)ret < sizeof(extra))
+			goto fail_trunc;
+
+		ent->data.device.devno = le64toh(extra.devno);
+		break;
+	}
 	default:
 		goto fail_unknown;
 	}

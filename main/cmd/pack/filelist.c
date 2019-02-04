@@ -206,10 +206,54 @@ fail:
 	return -1;
 }
 
+static int filelist_mknod(input_file_t *f, void *obj)
+{
+	image_entry_t **listptr = obj, *ent;
+	unsigned int maj, min;
+	char *ptr;
+
+	ent = filelist_mkentry(f, S_IFCHR);
+	if (ent == NULL)
+		return -1;
+
+	switch (f->line[0]) {
+	case 'c':
+	case 'C':
+		break;
+	case 'b':
+	case 'B':
+		ent->mode = (ent->mode & (~S_IFMT)) | S_IFBLK;
+		break;
+	default:
+		goto fail;
+	}
+
+	if (!isspace(f->line[1]))
+		goto fail;
+
+	ptr = f->line + 1;
+	while (isspace(*ptr))
+		++ptr;
+
+	if (sscanf(ptr, "%u %u", &maj, &min) != 2)
+		goto fail;
+
+	ent->data.device.devno = makedev(maj, min);
+
+	ent->next = *listptr;
+	*listptr = ent;
+	return 0;
+fail:
+	image_entry_free(ent);
+	input_file_complain(f, "error in device specification");
+	return -1;
+}
+
 static const keyword_handler_t line_hooks[] = {
 	{ "file", filelist_mkfile },
 	{ "dir", filelist_mkdir },
 	{ "slink", filelist_mkslink },
+	{ "nod", filelist_mknod },
 };
 
 #define NUM_LINE_HOOKS (sizeof(line_hooks) / sizeof(line_hooks[0]))

@@ -15,10 +15,11 @@ static const struct option long_opts[] = {
 	{ "no-chown", no_argument, NULL, 'o' },
 	{ "no-chmod", no_argument, NULL, 'm' },
 	{ "no-symlinks", no_argument, NULL, 'L' },
+	{ "no-devices", no_argument, NULL, 'D' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "r:omL";
+static const char *short_opts = "r:omLD";
 
 static int cmd_unpack(int argc, char **argv)
 {
@@ -37,6 +38,9 @@ static int cmd_unpack(int argc, char **argv)
 			break;
 		case 'L':
 			flags |= UNPACK_NO_SYMLINKS;
+			break;
+		case 'D':
+			flags |= UNPACK_NO_DEVICES;
 			break;
 		case 'o':
 			flags |= UNPACK_NO_CHOWN;
