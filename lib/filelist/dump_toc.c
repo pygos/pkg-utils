@@ -131,10 +131,63 @@ static int print_initrd(image_entry_t *ent, const char *root)
 	return 0;
 }
 
+static int print_pkg(image_entry_t *ent, const char *root)
+{
+	mode_t mode = ent->mode & (~S_IFMT);
+
+	switch (ent->mode & S_IFMT) {
+	case S_IFLNK:
+		mode = 0777;
+		fputs("slink", stdout);
+		break;
+	case S_IFREG:
+		fputs("file", stdout);
+		break;
+	case S_IFDIR:
+		fputs("dir", stdout);
+		break;
+	case S_IFCHR:
+	case S_IFBLK:
+		fputs("nod", stdout);
+		break;
+	default:
+		fputs("unknown file type in table of contents\n", stderr);
+		return -1;
+	}
+
+	printf(" %s 0%o %u %u ", ent->name, mode,
+	       (unsigned int)ent->uid, (unsigned int)ent->gid);
+
+	switch (ent->mode & S_IFMT) {
+	case S_IFCHR:
+		printf("c %u %u", major(ent->data.device.devno),
+		       minor(ent->data.device.devno));
+		break;
+	case S_IFBLK:
+		printf("b %u %u", major(ent->data.device.devno),
+		       minor(ent->data.device.devno));
+		break;
+	case S_IFLNK:
+		fputs(ent->data.symlink.target, stdout);
+		break;
+	case S_IFREG:
+		if (root == NULL) {
+			printf("%s", ent->name);
+		} else {
+			printf("%s/%s", root, ent->name);
+		}
+		break;
+	}
+
+	fputc('\n', stdout);
+	return 0;
+}
+
 static print_fun_t printers[] = {
 	[TOC_FORMAT_PRETTY] = print_pretty,
 	[TOC_FORMAT_SQFS] = print_sqfs,
 	[TOC_FORMAT_INITRD] = print_initrd,
+	[TOC_FORMAT_PKG] = print_pkg,
 };
 
 int dump_toc(image_entry_t *list, const char *root, TOC_FORMAT format)

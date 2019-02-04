@@ -32,6 +32,7 @@ typedef enum {
 	TOC_FORMAT_PRETTY = 0,
 	TOC_FORMAT_SQFS = 1,
 	TOC_FORMAT_INITRD = 2,
+	TOC_FORMAT_PKG = 3,
 } TOC_FORMAT;
 
 void image_entry_free(image_entry_t *ent);

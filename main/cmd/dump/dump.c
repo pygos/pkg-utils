@@ -30,6 +30,8 @@ static int cmd_dump(int argc, char **argv)
 				format = TOC_FORMAT_SQFS;
 			} else if (strcmp(optarg, "initrd") == 0) {
 				format = TOC_FORMAT_INITRD;
+			} else if (strcmp(optarg, "pkg") == 0) {
+				format = TOC_FORMAT_PKG;
 			} else {
 				fprintf(stderr, "unknown format '%s'\n",
 					optarg);
