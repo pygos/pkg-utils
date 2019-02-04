@@ -2,7 +2,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 
-#include "image_entry.h"
+#include "filelist/image_entry.h"
 
 typedef int (*print_fun_t)(image_entry_t *ent, const char *root);
 

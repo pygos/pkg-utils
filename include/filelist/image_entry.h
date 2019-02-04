@@ -4,8 +4,6 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#include "pkgreader.h"
-
 typedef struct image_entry_t {
 	struct image_entry_t *next;
 	char *name;

@@ -9,20 +9,23 @@ libutil_a_SOURCES += lib/util/write_retry.c lib/util/read_retry.c
 libutil_a_SOURCES += lib/util/canonicalize_name.c
 libutil_a_SOURCES += include/util/util.h include/util/input_file.h
 
+libfilelist_a_SOURCES = lib/filelist/dump_toc.c lib/filelist/image_entry.c
+libfilelist_a_SOURCES += lib/filelist/image_entry_sort.c
+libfilelist_a_SOURCES += include/filelist/image_entry.h
+
 # application core
 GLOBALHDR = include/pkgformat.h include/pkgreader.h
 GLOBALHDR += include/compressor.h include/command.h include/pkgwriter.h
-GLOBALHDR += include/image_entry.h include/pkgio.h
+GLOBALHDR += include/pkgio.h
 
 MAIN = main/pkg.c main/compressor.c main/command.c main/pkgreader.c
-MAIN += main/pkgwriter.c main/image_entry.c main/image_entry_sort.c
-MAIN += main/pkgio_rd_image_entry.c main/pkg_unpack.c main/dump_toc.c
+MAIN += main/pkgwriter.c main/pkgio_rd_image_entry.c main/pkg_unpack.c
 
 pkg_SOURCES = $(GLOBALHDR) $(MAIN)
 pkg_CFLAGS = $(AM_CFLAGS)
-pkg_LDADD = libutil.a
+pkg_LDADD = libutil.a libfilelist.a
 
-noinst_LIBRARIES = libutil.a
+noinst_LIBRARIES = libutil.a libfilelist.a
 bin_PROGRAMS = pkg
 
 EXTRA_DIST = autogen.sh

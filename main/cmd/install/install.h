@@ -11,7 +11,8 @@
 
 #include "util/util.h"
 
-#include "image_entry.h"
+#include "filelist/image_entry.h"
+
 #include "pkgreader.h"
 #include "command.h"
 #include "pkgio.h"

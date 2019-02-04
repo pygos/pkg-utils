@@ -2,7 +2,7 @@
 #define PKGIO_H
 
 #include "pkgreader.h"
-#include "image_entry.h"
+#include "filelist/image_entry.h"
 
 enum {
 	UNPACK_NO_CHOWN = 0x01,

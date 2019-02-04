@@ -1,7 +1,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
-#include "image_entry.h"
+#include "filelist/image_entry.h"
 
 static int compare_ent(image_entry_t *a, image_entry_t *b)
 {

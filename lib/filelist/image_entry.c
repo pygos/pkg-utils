@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "image_entry.h"
+#include "filelist/image_entry.h"
 
 void image_entry_free(image_entry_t *ent)
 {

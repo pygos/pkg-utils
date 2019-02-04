@@ -17,7 +17,8 @@
 #include "util/input_file.h"
 #include "util/util.h"
 
-#include "image_entry.h"
+#include "filelist/image_entry.h"
+
 #include "compressor.h"
 #include "pkgformat.h"
 #include "pkgwriter.h"
