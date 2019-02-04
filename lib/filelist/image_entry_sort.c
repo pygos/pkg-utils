@@ -5,28 +5,38 @@
 
 static int compare_ent(image_entry_t *a, image_entry_t *b)
 {
-	if (S_ISDIR(a->mode)) {
+	/* directories < .. < symlinks < devices < .. < files */
+	switch (a->mode & S_IFMT) {
+	case S_IFDIR:
 		if (S_ISDIR(b->mode))
 			goto out_len;
 		return -1;
+	case S_IFREG:
+		if (S_ISREG(b->mode))
+			goto out_fsize;
+		return 1;
+	case S_IFLNK:
+		if (S_ISLNK(b->mode))
+			goto out_len;
+		if (S_ISDIR(b->mode))
+			return 1;
+		return -1;
+	case S_IFBLK:
+	case S_IFCHR:
+		if (S_ISDIR(b->mode) || S_ISLNK(b->mode))
+			return 1;
+		if (S_ISBLK(b->mode) || S_ISCHR(b->mode))
+			goto out_len;
+		return -1;
 	}
-	if (S_ISDIR(b->mode))
-		return 1;
-
-	if (S_ISREG(a->mode)) {
-		if (S_ISREG(b->mode)) {
-			if (a->data.file.size > b->data.file.size)
-				return 1;
-			if (a->data.file.size < b->data.file.size)
-				return -1;
-			return 0;
-		}
-		return 1;
-	}
-	if (S_ISREG(b->mode))
-		return 1;
 out_len:
 	return (int)strlen(a->name) - (int)strlen(b->name);
+out_fsize:
+	if (a->data.file.size > b->data.file.size)
+		return 1;
+	if (a->data.file.size < b->data.file.size)
+		return -1;
+	return 0;
 }
 
 static image_entry_t *insert_sorted(image_entry_t *list, image_entry_t *ent)

@@ -202,8 +202,6 @@ int pkg_unpack(int rootfd, int flags, pkg_reader_t *rd)
 	if (list == NULL)
 		return -1;
 
-	list = image_entry_sort(list);
-
 	if (pkg_reader_rewind(rd))
 		goto fail;
 

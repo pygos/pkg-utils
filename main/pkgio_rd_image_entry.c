@@ -170,7 +170,7 @@ image_entry_t *image_entry_list_from_package(pkg_reader_t *pkg)
 			goto fail_multi;
 	}
 
-	return list;
+	return image_entry_sort(list);
 fail_oom:
 	fputs("out of memory\n", stderr);
 	goto fail;
