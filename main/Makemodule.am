@@ -1,0 +1,52 @@
+pkg_SOURCES = include/pkgformat.h include/pkgreader.h include/pkgio.h
+pkg_SOURCES += include/compressor.h include/command.h include/pkgwriter.h
+pkg_SOURCES += main/pkg.c main/compressor.c main/command.c main/pkgreader.c
+pkg_SOURCES += main/pkgwriter.c main/pkgio_rd_image_entry.c main/pkg_unpack.c
+pkg_CFLAGS = $(AM_CFLAGS)
+pkg_LDADD = libutil.a libfilelist.a
+
+##### commands #####
+
+# pack command
+pkg_SOURCES += main/cmd/pack/filelist.c
+pkg_SOURCES += main/cmd/pack/write_toc.c main/cmd/pack/write_files.c
+pkg_SOURCES += main/cmd/pack/pack.h main/cmd/pack/pack.c
+pkg_SOURCES += main/cmd/pack/desc.c main/cmd/pack/write_hdr.c
+
+# dump command
+pkg_SOURCES += main/cmd/dump/dump.c main/cmd/dump/dump.h
+pkg_SOURCES += main/cmd/dump/dump_header.c
+
+# install command
+pkg_SOURCES += main/cmd/install/collect.c main/cmd/install/install.c
+pkg_SOURCES += main/cmd/install/install.h main/cmd/install/pkglist.c
+pkg_SOURCES += main/cmd/install/tsort.c
+
+# unpack command
+pkg_SOURCES += main/cmd/unpack.c
+
+# help command
+pkg_SOURCES += main/cmd/help.c
+
+##### compressors #####
+
+# dummy compressor
+pkg_SOURCES += main/compressors/none.c
+
+# zlib compressor
+if WITH_ZLIB
+pkg_SOURCES += main/compressors/zlib.c
+
+pkg_CFLAGS += $(ZLIB_CFLAGS)
+pkg_LDADD += $(ZLIB_LIBS)
+endif
+
+# lzma compressor
+if WITH_LZMA
+pkg_SOURCES += main/compressors/lzma.c
+
+pkg_CFLAGS += $(XZ_CFLAGS)
+pkg_LDADD += $(XZ_LIBS)
+endif
+
+bin_PROGRAMS += pkg
