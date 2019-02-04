@@ -87,9 +87,9 @@ static int print_initrd(image_entry_t *ent, const char *root)
 }
 
 static print_fun_t printers[] = {
-	print_pretty,
-	print_sqfs,
-	print_initrd,
+	[TOC_FORMAT_PRETTY] = print_pretty,
+	[TOC_FORMAT_SQFS] = print_sqfs,
+	[TOC_FORMAT_INITRD] = print_initrd,
 };
 
 int dump_toc(image_entry_t *list, const char *root, TOC_FORMAT format)
