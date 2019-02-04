@@ -9,10 +9,11 @@ static const struct option long_opts[] = {
 	{ "list-packages", no_argument, NULL, 'p' },
 	{ "list-files", no_argument, NULL, 'l' },
 	{ "format", required_argument, NULL, 'F' },
+	{ "no-symlinks", no_argument, NULL, 'L' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "r:omdR:plF:";
+static const char *short_opts = "r:omdR:plF:L";
 
 static int unpack_packages(int repofd, int rootfd, int flags,
 			   struct pkg_dep_list *list)
@@ -149,6 +150,9 @@ static int cmd_install(int argc, char **argv)
 			break;
 		case 'm':
 			flags |= UNPACK_NO_CHMOD;
+			break;
+		case 'L':
+			flags |= UNPACK_NO_SYMLINKS;
 			break;
 		default:
 			tell_read_help(argv[0]);

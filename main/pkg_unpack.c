@@ -9,7 +9,7 @@
 #include "pkgio.h"
 #include "util/util.h"
 
-static int create_hierarchy(int dirfd, image_entry_t *list)
+static int create_hierarchy(int dirfd, image_entry_t *list, int flags)
 {
 	image_entry_t *ent;
 
@@ -27,6 +27,9 @@ static int create_hierarchy(int dirfd, image_entry_t *list)
 
 	for (ent = list; ent != NULL; ent = ent->next) {
 		if (S_ISLNK(ent->mode)) {
+			if (flags & UNPACK_NO_SYMLINKS)
+				continue;
+
 			if (symlinkat(ent->data.symlink.target,
 				      dirfd, ent->name)) {
 				fprintf(stderr, "symlink %s to %s: %s\n",
@@ -175,7 +178,7 @@ int pkg_unpack(int rootfd, int flags, pkg_reader_t *rd)
 	if (pkg_reader_rewind(rd))
 		goto fail;
 
-	if (create_hierarchy(rootfd, list))
+	if (create_hierarchy(rootfd, list, flags))
 		goto fail;
 
 	for (;;) {

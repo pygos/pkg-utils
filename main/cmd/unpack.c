@@ -14,10 +14,11 @@ static const struct option long_opts[] = {
 	{ "root", required_argument, NULL, 'r' },
 	{ "no-chown", no_argument, NULL, 'o' },
 	{ "no-chmod", no_argument, NULL, 'm' },
+	{ "no-symlinks", no_argument, NULL, 'L' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "r:om";
+static const char *short_opts = "r:omL";
 
 static int cmd_unpack(int argc, char **argv)
 {
@@ -33,6 +34,9 @@ static int cmd_unpack(int argc, char **argv)
 		switch (i) {
 		case 'r':
 			root = optarg;
+			break;
+		case 'L':
+			flags |= UNPACK_NO_SYMLINKS;
 			break;
 		case 'o':
 			flags |= UNPACK_NO_CHOWN;

@@ -7,6 +7,7 @@
 enum {
 	UNPACK_NO_CHOWN = 0x01,
 	UNPACK_NO_CHMOD = 0x02,
+	UNPACK_NO_SYMLINKS = 0x04,
 };
 
 int pkg_unpack(int rootfd, int flags, pkg_reader_t *rd);
