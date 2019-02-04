@@ -3,20 +3,24 @@ ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(top_srcdir)/include -D_GNU_SOURCE
 AM_CFLAGS = $(WARN_CFLAGS)
 
-# application core
-GLOBALHDR = include/pkgformat.h include/util.h include/pkgreader.h
-GLOBALHDR += include/compressor.h include/command.h include/pkgwriter.h
-GLOBALHDR += include/image_entry.h include/pkgio.h include/input_file.h
+# helper libraries
+libutil_a_SOURCES = lib/util/input_file.c lib/util/mkdir_p.c lib/util/util.c
+libutil_a_SOURCES += include/util/util.h include/util/input_file.h
 
-MAIN = main/pkg.c main/util.c main/compressor.c main/command.c main/pkgreader.c
+# application core
+GLOBALHDR = include/pkgformat.h include/pkgreader.h
+GLOBALHDR += include/compressor.h include/command.h include/pkgwriter.h
+GLOBALHDR += include/image_entry.h include/pkgio.h
+
+MAIN = main/pkg.c main/compressor.c main/command.c main/pkgreader.c
 MAIN += main/pkgwriter.c main/image_entry.c main/image_entry_sort.c
-MAIN += main/mkdir_p.c main/pkgio_rd_image_entry.c main/pkg_unpack.c
-MAIN += main/input_file.c main/dump_toc.c
+MAIN += main/pkgio_rd_image_entry.c main/pkg_unpack.c main/dump_toc.c
 
 pkg_SOURCES = $(GLOBALHDR) $(MAIN)
 pkg_CFLAGS = $(AM_CFLAGS)
-pkg_LDADD =
+pkg_LDADD = libutil.a
 
+noinst_LIBRARIES = libutil.a
 bin_PROGRAMS = pkg
 
 EXTRA_DIST = autogen.sh

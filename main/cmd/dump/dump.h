@@ -7,12 +7,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "util/util.h"
+
 #include "image_entry.h"
 #include "pkgformat.h"
 #include "pkgreader.h"
 #include "command.h"
 #include "pkgio.h"
-#include "util.h"
 
 typedef enum {
 	DUMP_TOC = 0x01,

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "util.h"
+#include "util/util.h"
 
 int canonicalize_name(char *filename)
 {

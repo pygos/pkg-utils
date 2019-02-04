@@ -3,7 +3,6 @@
 #include <stdio.h>
 
 #include "image_entry.h"
-#include "util.h"
 
 void image_entry_free(image_entry_t *ent)
 {

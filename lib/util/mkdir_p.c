@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "util.h"
+#include "util/util.h"
 
 int mkdir_p(const char *path)
 {

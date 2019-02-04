@@ -5,6 +5,7 @@ AM_INIT_AUTOMAKE([foreign dist-xz subdir-objects])
 AM_SILENT_RULES([yes])
 AC_PROG_CC
 AC_PROG_CC_C99
+AC_PROG_RANLIB
 AC_PROG_INSTALL
 
 m4_ifndef([PKG_PROG_PKG_CONFIG],

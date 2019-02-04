@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include "input_file.h"
+#include "util/input_file.h"
 
 static int prefetch_line(input_file_t *f)
 {

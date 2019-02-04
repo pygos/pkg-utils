@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "pkgio.h"
-#include "util.h"
+#include "util/util.h"
 
 static int read_extra(pkg_reader_t *pkg, image_entry_t *ent)
 {

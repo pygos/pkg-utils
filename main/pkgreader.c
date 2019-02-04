@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include "util.h"
+#include "util/util.h"
 #include "pkgreader.h"
 #include "compressor.h"
 

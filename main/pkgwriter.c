@@ -6,7 +6,7 @@
 #include <errno.h>
 
 #include "pkgwriter.h"
-#include "util.h"
+#include "util/util.h"
 
 struct pkg_writer_t {
 	const char *path;

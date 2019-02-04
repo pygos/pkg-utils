@@ -4,10 +4,11 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+#include "util/util.h"
+
 #include "pkgreader.h"
 #include "command.h"
 #include "pkgio.h"
-#include "util.h"
 
 static const struct option long_opts[] = {
 	{ "root", required_argument, NULL, 'r' },

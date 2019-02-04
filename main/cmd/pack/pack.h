@@ -14,13 +14,14 @@
 #include <ctype.h>
 #include <fcntl.h>
 
+#include "util/input_file.h"
+#include "util/util.h"
+
 #include "image_entry.h"
-#include "input_file.h"
 #include "compressor.h"
 #include "pkgformat.h"
 #include "pkgwriter.h"
 #include "command.h"
-#include "util.h"
 
 typedef struct dependency_t {
 	struct dependency_t *next;
