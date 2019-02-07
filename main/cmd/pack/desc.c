@@ -58,12 +58,61 @@ static int handle_name(input_file_t *f, void *obj)
 	return 0;
 }
 
+static int handle_toc_compressor(input_file_t *f, void *obj)
+{
+	pkg_desc_t *desc = obj;
+
+	desc->toccmp = compressor_by_name(f->line);
+
+	if (desc->toccmp == NULL) {
+		input_file_complain(f, "unkown compressor");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int handle_data_compressor(input_file_t *f, void *obj)
+{
+	pkg_desc_t *desc = obj;
+
+	desc->datacmp = compressor_by_name(f->line);
+
+	if (desc->datacmp == NULL) {
+		input_file_complain(f, "unkown compressor");
+		return -1;
+	}
+
+	return 0;
+}
+
 static const keyword_handler_t line_hooks[] = {
+	{ "toc-compressor", handle_toc_compressor },
+	{ "data-compressor", handle_data_compressor },
 	{ "requires", handle_requires },
 	{ "name", handle_name },
 };
 
 #define NUM_LINE_HOOKS (sizeof(line_hooks) / sizeof(line_hooks[0]))
+
+static compressor_t *get_default_compressor(void)
+{
+	compressor_t *cmp;
+
+	cmp = compressor_by_id(PKG_COMPRESSION_LZMA);
+	if (cmp != NULL)
+		return cmp;
+
+	cmp = compressor_by_id(PKG_COMPRESSION_ZLIB);
+	if (cmp != NULL)
+		return cmp;
+
+	cmp = compressor_by_id(PKG_COMPRESSION_NONE);
+	if (cmp != NULL)
+		return cmp;
+
+	return cmp;
+}
 
 int desc_read(const char *path, pkg_desc_t *desc)
 {
@@ -80,6 +129,19 @@ int desc_read(const char *path, pkg_desc_t *desc)
 	}
 
 	cleanup_file(&f);
+
+	if (desc->datacmp == NULL)
+		desc->datacmp = get_default_compressor();
+
+	if (desc->toccmp == NULL)
+		desc->toccmp = get_default_compressor();
+
+	if (desc->datacmp == NULL || desc->toccmp == NULL) {
+		fputs("no compressor implementations available\n", stderr);
+		desc_free(desc);
+		return -1;
+	}
+
 	return 0;
 }
 

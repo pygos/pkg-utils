@@ -1,44 +1,13 @@
 #include "pack.h"
 
 static const struct option long_opts[] = {
-	{ "toc-compressor", required_argument, NULL, 't' },
-	{ "file-compressor", required_argument, NULL, 'f' },
 	{ "description", required_argument, NULL, 'd' },
 	{ "file-list", required_argument, NULL, 'l' },
 	{ "repo-dir", required_argument, NULL, 'r' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "t:f:l:r:d:";
-
-static compressor_t *get_default_compressor(void)
-{
-	compressor_t *cmp;
-
-	cmp = compressor_by_id(PKG_COMPRESSION_LZMA);
-	if (cmp != NULL)
-		return cmp;
-
-	cmp = compressor_by_id(PKG_COMPRESSION_ZLIB);
-	if (cmp != NULL)
-		return cmp;
-
-	cmp = compressor_by_id(PKG_COMPRESSION_NONE);
-	if (cmp != NULL)
-		return cmp;
-
-	return cmp;
-}
-
-static compressor_t *try_get_compressor(const char *name)
-{
-	compressor_t *cmp = compressor_by_name(name);
-
-	if (cmp == NULL)
-		fprintf(stderr, "unkown compressor: %s\n", name);
-
-	return cmp;
-}
+static const char *short_opts = "l:r:d:";
 
 static pkg_writer_t *open_writer(pkg_desc_t *desc, const char *repodir)
 {
@@ -56,19 +25,10 @@ static pkg_writer_t *open_writer(pkg_desc_t *desc, const char *repodir)
 static int cmd_pack(int argc, char **argv)
 {
 	const char *filelist = NULL, *repodir = NULL, *descfile = NULL;
-	compressor_t *cmp_toc, *cmp_files;
 	image_entry_t *list = NULL;
 	pkg_writer_t *wr;
 	pkg_desc_t desc;
 	int i;
-
-	cmp_toc = get_default_compressor();
-	cmp_files = cmp_toc;
-
-	if (cmp_toc == NULL) {
-		fputs("no compressor implementations available\n", stderr);
-		return EXIT_FAILURE;
-	}
 
 	for (;;) {
 		i = getopt_long(argc, argv, short_opts, long_opts, NULL);
@@ -76,16 +36,6 @@ static int cmd_pack(int argc, char **argv)
 			break;
 
 		switch (i) {
-		case 't':
-			cmp_toc = try_get_compressor(optarg);
-			if (cmp_toc == NULL)
-				return EXIT_FAILURE;
-			break;
-		case 'f':
-			cmp_files = try_get_compressor(optarg);
-			if (cmp_files == NULL)
-				return EXIT_FAILURE;
-			break;
 		case 'l':
 			filelist = optarg;
 			break;
@@ -130,10 +80,10 @@ static int cmd_pack(int argc, char **argv)
 		goto fail;
 
 	if (list != NULL) {
-		if (write_toc(wr, list, cmp_toc))
+		if (write_toc(wr, list, desc.toccmp))
 			goto fail;
 
-		if (write_files(wr, list, cmp_files))
+		if (write_files(wr, list, desc.datacmp))
 			goto fail;
 	}
 
@@ -163,11 +113,7 @@ static command_t pack = {
 "  --description, -d <path> Specify a file containing a description of the\n"
 "                           package, including information such as package\n"
 "                           dependencies, the actual package name, etc.\n"
-"\n"
-"  --toc-compressor, -t <compressor>\n"
-"  --file-compressor, -f <compressor>\n"
-"      Specify what compressor to use for compressing the table of contents,\n"
-"      or for compressing files respectively.\n",
+"\n",
 	.run_cmd = cmd_pack,
 };
 

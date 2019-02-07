@@ -32,6 +32,8 @@ typedef struct dependency_t {
 } dependency_t;
 
 typedef struct {
+	compressor_t *datacmp;
+	compressor_t *toccmp;
 	dependency_t *deps;
 	char *name;
 } pkg_desc_t;
