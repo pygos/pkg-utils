@@ -42,7 +42,7 @@ int filelist_mkslink(input_file_t *f, void *obj);
 
 int filelist_mkfile(input_file_t *f, void *obj);
 
-image_entry_t *filelist_read(const char *filename);
+int filelist_read(const char *filename, image_entry_t **out);
 
 int write_toc(pkg_writer_t *wr, image_entry_t *list, compressor_t *cmp);
 

@@ -198,12 +198,14 @@ int pkg_unpack(int rootfd, int flags, pkg_reader_t *rd)
 	record_t *hdr;
 	int ret;
 
-	list = image_entry_list_from_package(rd);
-	if (list == NULL)
+	if (image_entry_list_from_package(rd, &list))
 		return -1;
 
 	if (pkg_reader_rewind(rd))
 		goto fail;
+
+	if (list == NULL)
+		return 0;
 
 	if (create_hierarchy(rootfd, list, flags))
 		goto fail;

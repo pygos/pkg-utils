@@ -40,26 +40,6 @@ static compressor_t *try_get_compressor(const char *name)
 	return cmp;
 }
 
-static int alloc_file_ids(image_entry_t *list)
-{
-	image_entry_t *ent;
-	uint64_t file_id = 0;
-
-	for (ent = list; ent != NULL; ent = ent->next) {
-		if (!S_ISREG(ent->mode))
-			continue;
-
-		if (file_id > 0x00000000FFFFFFFFUL) {
-			fprintf(stderr, "too many input files\n");
-			return -1;
-		}
-
-		ent->data.file.id = file_id++;
-	}
-
-	return 0;
-}
-
 static pkg_writer_t *open_writer(pkg_desc_t *desc, const char *repodir)
 {
 	char *path;
@@ -77,7 +57,7 @@ static int cmd_pack(int argc, char **argv)
 {
 	const char *filelist = NULL, *repodir = NULL, *descfile = NULL;
 	compressor_t *cmp_toc, *cmp_files;
-	image_entry_t *list;
+	image_entry_t *list = NULL;
 	pkg_writer_t *wr;
 	pkg_desc_t desc;
 	int i;
@@ -133,26 +113,14 @@ static int cmd_pack(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (filelist == NULL) {
-		fputs("missing argument: input file list\n", stderr);
-		tell_read_help(argv[0]);
-		return EXIT_FAILURE;
-	}
-
 	if (optind < argc)
 		fputs("warning: ignoring extra arguments\n", stderr);
 
 	if (desc_read(descfile, &desc))
 		return EXIT_FAILURE;
 
-	list = filelist_read(filelist);
-	if (list == NULL)
+	if (filelist != NULL && filelist_read(filelist, &list))
 		goto fail_desc;
-
-	list = image_entry_sort(list);
-
-	if (alloc_file_ids(list))
-		goto fail_fp;
 
 	wr = open_writer(&desc, repodir);
 	if (wr == NULL)
@@ -161,11 +129,13 @@ static int cmd_pack(int argc, char **argv)
 	if (write_header_data(wr, &desc))
 		goto fail;
 
-	if (write_toc(wr, list, cmp_toc))
-		goto fail;
+	if (list != NULL) {
+		if (write_toc(wr, list, cmp_toc))
+			goto fail;
 
-	if (write_files(wr, list, cmp_files))
-		goto fail;
+		if (write_files(wr, list, cmp_files))
+			goto fail;
+	}
 
 	pkg_writer_close(wr);
 	image_entry_free_list(list);

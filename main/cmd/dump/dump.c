@@ -75,11 +75,10 @@ static int cmd_dump(int argc, char **argv)
 			goto out;
 	}
 
-	list = image_entry_list_from_package(rd);
-	if (list == NULL)
+	if (image_entry_list_from_package(rd, &list))
 		goto out;
 
-	if (flags & DUMP_TOC) {
+	if (flags & DUMP_TOC && list != NULL) {
 		if (dump_toc(list, root, format))
 			goto out;
 	}

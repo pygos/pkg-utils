@@ -83,20 +83,28 @@ fail_trunc:
 	return -1;
 }
 
-image_entry_t *image_entry_list_from_package(pkg_reader_t *pkg)
+int image_entry_list_from_package(pkg_reader_t *pkg, image_entry_t **out)
 {
 	image_entry_t *list = NULL, *end = NULL, *imgent;
 	toc_entry_t ent;
 	record_t *hdr;
 	ssize_t ret;
 	char *path;
+	int status;
 
 	if (pkg_reader_rewind(pkg))
-		return NULL;
+		return -1;
 
 	do {
-		if (pkg_reader_get_next_record(pkg) <= 0)
-			return NULL;
+		status = pkg_reader_get_next_record(pkg);
+
+		if (status == 0) {
+			*out = NULL;
+			return 0;
+		}
+
+		if (status < 0)
+			return -1;
 
 		hdr = pkg_reader_current_record_header(pkg);
 	} while (hdr->magic != PKG_MAGIC_TOC);
@@ -170,7 +178,8 @@ image_entry_t *image_entry_list_from_package(pkg_reader_t *pkg)
 			goto fail_multi;
 	}
 
-	return image_entry_sort(list);
+	*out = image_entry_sort(list);
+	return 0;
 fail_oom:
 	fputs("out of memory\n", stderr);
 	goto fail;
@@ -184,5 +193,5 @@ fail_multi:
 	goto fail;
 fail:
 	image_entry_free_list(list);
-	return NULL;
+	return -1;
 }

@@ -13,6 +13,6 @@ enum {
 
 int pkg_unpack(int rootfd, int flags, pkg_reader_t *rd);
 
-image_entry_t *image_entry_list_from_package(pkg_reader_t *pkg);
+int image_entry_list_from_package(pkg_reader_t *pkg, image_entry_t ** list);
 
 #endif /* PKGIO_H */

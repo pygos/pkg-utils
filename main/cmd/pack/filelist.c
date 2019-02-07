@@ -258,27 +258,49 @@ static const keyword_handler_t line_hooks[] = {
 
 #define NUM_LINE_HOOKS (sizeof(line_hooks) / sizeof(line_hooks[0]))
 
-image_entry_t *filelist_read(const char *filename)
+static int alloc_file_ids(image_entry_t *list)
+{
+	image_entry_t *ent;
+	uint64_t file_id = 0;
+
+	for (ent = list; ent != NULL; ent = ent->next) {
+		if (!S_ISREG(ent->mode))
+			continue;
+
+		if (file_id > 0x00000000FFFFFFFFUL) {
+			fprintf(stderr, "too many input files\n");
+			return -1;
+		}
+
+		ent->data.file.id = file_id++;
+	}
+
+	return 0;
+}
+
+int filelist_read(const char *filename, image_entry_t **out)
 {
 	image_entry_t *list = NULL;
 	input_file_t f;
 
 	if (open_file(&f, filename))
-		return NULL;
+		return -1;
 
 	if (process_file(&f, line_hooks, NUM_LINE_HOOKS, &list))
 		goto fail;
 
-	if (list == NULL) {
-		fprintf(stderr, "%s: does not contain any entries\n",
-			f.filename);
-		goto fail;
+	if (list != NULL) {
+		list = image_entry_sort(list);
+
+		if (alloc_file_ids(list))
+			goto fail;
 	}
 
 	cleanup_file(&f);
-	return list;
+	*out = list;
+	return 0;
 fail:
 	cleanup_file(&f);
 	image_entry_free_list(list);
-	return NULL;
+	return -1;
 }

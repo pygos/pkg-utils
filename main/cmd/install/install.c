@@ -58,13 +58,12 @@ static int list_files(int repofd, const char *rootdir, TOC_FORMAT format,
 		if (rd == NULL)
 			return -1;
 
-		toc = image_entry_list_from_package(rd);
-		if (toc == NULL) {
+		if (image_entry_list_from_package(rd, &toc)) {
 			pkg_reader_close(rd);
 			return -1;
 		}
 
-		if (dump_toc(toc, rootdir, format)) {
+		if (toc != NULL && dump_toc(toc, rootdir, format)) {
 			image_entry_free_list(toc);
 			pkg_reader_close(rd);
 			return -1;
