@@ -4,12 +4,14 @@ static const struct option long_opts[] = {
 	{ "description", required_argument, NULL, 'd' },
 	{ "file-list", required_argument, NULL, 'l' },
 	{ "repo-dir", required_argument, NULL, 'r' },
+	{ "force", no_argument, NULL, 'f' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "l:r:d:";
+static const char *short_opts = "l:r:d:f";
 
-static pkg_writer_t *open_writer(pkg_desc_t *desc, const char *repodir)
+static pkg_writer_t *open_writer(pkg_desc_t *desc, const char *repodir,
+				 bool force)
 {
 	char *path;
 
@@ -19,13 +21,14 @@ static pkg_writer_t *open_writer(pkg_desc_t *desc, const char *repodir)
 	path = alloca(strlen(repodir) + strlen(desc->name) + 16);
 	sprintf(path, "%s/%s.pkg", repodir, desc->name);
 
-	return pkg_writer_open(path);
+	return pkg_writer_open(path, force);
 }
 
 static int cmd_pack(int argc, char **argv)
 {
 	const char *filelist = NULL, *repodir = NULL, *descfile = NULL;
 	image_entry_t *list = NULL;
+	bool force = false;
 	pkg_writer_t *wr;
 	pkg_desc_t desc;
 	int i;
@@ -44,6 +47,9 @@ static int cmd_pack(int argc, char **argv)
 			break;
 		case 'r':
 			repodir = optarg;
+			break;
+		case 'f':
+			force = true;
 			break;
 		default:
 			tell_read_help(argv[0]);
@@ -72,7 +78,7 @@ static int cmd_pack(int argc, char **argv)
 	if (filelist != NULL && filelist_read(filelist, &list))
 		goto fail_desc;
 
-	wr = open_writer(&desc, repodir);
+	wr = open_writer(&desc, repodir, force);
 	if (wr == NULL)
 		goto fail_fp;
 
@@ -113,6 +119,8 @@ static command_t pack = {
 "  --description, -d <path> Specify a file containing a description of the\n"
 "                           package, including information such as package\n"
 "                           dependencies, the actual package name, etc.\n"
+"  --force, -f              If a package with the same name already exists,\n"
+"                           overwrite it.\n"
 "\n",
 	.run_cmd = cmd_pack,
 };

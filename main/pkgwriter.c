@@ -78,10 +78,11 @@ static int flush_to_file(pkg_writer_t *wr)
 	return 0;
 }
 
-pkg_writer_t *pkg_writer_open(const char *path)
+pkg_writer_t *pkg_writer_open(const char *path, bool force)
 {
 	pkg_writer_t *wr = calloc(1, sizeof(*wr));
 	compressor_t *cmp;
+	int flags;
 
 	cmp = compressor_by_id(PKG_COMPRESSION_NONE);
 	if (cmp == NULL) {
@@ -101,7 +102,15 @@ pkg_writer_t *pkg_writer_open(const char *path)
 		goto fail;
 	}
 
-	wr->fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0644);
+	flags = O_WRONLY | O_CREAT;
+
+	if (force) {
+		flags |= O_TRUNC;
+	} else {
+		flags |= O_EXCL;
+	}
+
+	wr->fd = open(path, flags, 0644);
 	if (wr->fd == -1) {
 		perror(path);
 		goto fail_stream;

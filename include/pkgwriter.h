@@ -1,12 +1,14 @@
 #ifndef PKGWRITER_H
 #define PKGWRITER_H
 
+#include <stdbool.h>
+
 #include "pkgformat.h"
 #include "compressor.h"
 
 typedef struct pkg_writer_t pkg_writer_t;
 
-pkg_writer_t *pkg_writer_open(const char *path);
+pkg_writer_t *pkg_writer_open(const char *path, bool force);
 
 void pkg_writer_close(pkg_writer_t *writer);
 
