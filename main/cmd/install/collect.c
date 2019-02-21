@@ -42,6 +42,13 @@ int collect_dependencies(int repofd, struct pkg_dep_list *list)
 
 			buffer[dep.name_length] = '\0';
 
+			if (strcmp((char *)buffer, it->name) == 0) {
+				fprintf(stderr,
+					"%s: package depends on itself\n",
+					it->name);
+				goto fail;
+			}
+
 			it->deps[i] = find_pkg(list, (char *)buffer);
 			if (it->deps[i] == NULL) {
 				it->deps[i] = append_pkg(list, (char *)buffer);
