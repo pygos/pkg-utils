@@ -162,7 +162,8 @@ pkg_reader_t *pkg_reader_open_repo(int dirfd, const char *name)
 	size_t i;
 
 	for (i = 0; name[i] != '\0'; ++i) {
-		if (!isalnum(name[i]) && name[i] != '_' && name[i] != '-') {
+		if (!isalnum(name[i]) && name[i] != '_' && name[i] != '-' &&
+		    name[i] != '+') {
 			fprintf(stderr,
 				"illegal characters in package name '%s'\n",
 				name);
