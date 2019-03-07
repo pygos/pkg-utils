@@ -40,24 +40,6 @@ static int handle_requires(input_file_t *f, void *obj)
 	return 0;
 }
 
-static int handle_name(input_file_t *f, void *obj)
-{
-	pkg_desc_t *desc = obj;
-
-	if (desc->name != NULL) {
-		input_file_complain(f, "name redefined");
-		return -1;
-	}
-
-	desc->name = strdup(f->line);
-	if (desc->name == NULL) {
-		input_file_complain(f, "out of memory");
-		return -1;
-	}
-
-	return 0;
-}
-
 static int handle_toc_compressor(input_file_t *f, void *obj)
 {
 	pkg_desc_t *desc = obj;
@@ -90,7 +72,6 @@ static const keyword_handler_t line_hooks[] = {
 	{ "toc-compressor", handle_toc_compressor },
 	{ "data-compressor", handle_data_compressor },
 	{ "requires", handle_requires },
-	{ "name", handle_name },
 };
 
 #define NUM_LINE_HOOKS (sizeof(line_hooks) / sizeof(line_hooks[0]))
@@ -117,6 +98,7 @@ static compressor_t *get_default_compressor(void)
 int desc_read(const char *path, pkg_desc_t *desc)
 {
 	input_file_t f;
+	char *ptr;
 
 	memset(desc, 0, sizeof(*desc));
 
@@ -141,6 +123,19 @@ int desc_read(const char *path, pkg_desc_t *desc)
 		desc_free(desc);
 		return -1;
 	}
+
+	ptr = strrchr(path, '/');
+
+	desc->name = strdup((ptr == NULL) ? path : (ptr + 1));
+	if (desc->name == NULL) {
+		fputs("out of memory\n", stderr);
+		desc_free(desc);
+		return -1;
+	}
+
+	ptr = strrchr(desc->name, '.');
+	if (ptr != NULL)
+		*ptr = '\0';
 
 	return 0;
 }
