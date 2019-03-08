@@ -3,6 +3,7 @@ libutil_a_SOURCES += lib/util/write_retry.c lib/util/read_retry.c
 libutil_a_SOURCES += lib/util/canonicalize_name.c
 libutil_a_SOURCES += include/util/util.h include/util/input_file.h
 libutil_a_SOURCES += include/util/hashtable.h lib/util/hashtable.c
+libutil_a_SOURCES += lib/util/fileproc.c
 
 libfilelist_a_SOURCES = lib/filelist/dump_toc.c lib/filelist/image_entry.c
 libfilelist_a_SOURCES += lib/filelist/image_entry_sort.c
