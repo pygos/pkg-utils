@@ -57,47 +57,37 @@ retry:
 	return 0;
 }
 
-void cleanup_file(input_file_t *f)
-{
-	fclose(f->f);
-	free(f->line);
-}
-
-int open_file(input_file_t *f, const char *filename)
-{
-	memset(f, 0, sizeof(*f));
-
-	f->filename = filename;
-	f->f = fopen(filename, "r");
-
-	if (f->f == NULL) {
-		perror(f->filename);
-		return -1;
-	}
-
-	return 0;
-}
-
 void input_file_complain(const input_file_t *f, const char *msg)
 {
 	fprintf(stderr, "%s: %zu: %s\n", f->filename, f->linenum, msg);
 }
 
-int process_file(input_file_t *f, const keyword_handler_t *handlers,
+int process_file(const char *filename, const keyword_handler_t *handlers,
 		 size_t count, void *obj)
 {
+	input_file_t f;
 	size_t i, len;
 	char *ptr;
 	int ret;
 
+	memset(&f, 0, sizeof(f));
+
+	f.filename = filename;
+	f.f = fopen(filename, "r");
+
+	if (f.f == NULL) {
+		perror(f.filename);
+		return -1;
+	}
+
 	for (;;) {
-		ret = prefetch_line(f);
+		ret = prefetch_line(&f);
 		if (ret < 0)
-			return -1;
+			goto fail;
 		if (ret > 0)
 			break;
 
-		ptr = f->line;
+		ptr = f.line;
 
 		for (i = 0; i < count; ++i) {
 			len = strlen(handlers[i].name);
@@ -108,19 +98,25 @@ int process_file(input_file_t *f, const keyword_handler_t *handlers,
 				continue;
 			for (ptr += len; isspace(*ptr); ++ptr)
 				;
-			memmove(f->line, ptr, strlen(ptr) + 1);
+			memmove(f.line, ptr, strlen(ptr) + 1);
 			break;
 		}
 
 		if (i == count) {
 			fprintf(stderr, "%s: %zu: unknown keyword\n",
-				f->filename, f->linenum);
-			return -1;
+				f.filename, f.linenum);
+			goto fail;
 		}
 
-		if (handlers[i].handle(f, obj))
-			return -1;
+		if (handlers[i].handle(&f, obj))
+			goto fail;
 	}
 
+	fclose(f.f);
+	free(f.line);
 	return 0;
+fail:
+	fclose(f.f);
+	free(f.line);
+	return -1;
 }

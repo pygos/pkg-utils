@@ -97,20 +97,12 @@ static compressor_t *get_default_compressor(void)
 
 int desc_read(const char *path, pkg_desc_t *desc)
 {
-	input_file_t f;
 	char *ptr;
 
 	memset(desc, 0, sizeof(*desc));
 
-	if (open_file(&f, path))
+	if (process_file(path, line_hooks, NUM_LINE_HOOKS, desc))
 		return -1;
-
-	if (process_file(&f, line_hooks, NUM_LINE_HOOKS, desc)) {
-		cleanup_file(&f);
-		return -1;
-	}
-
-	cleanup_file(&f);
 
 	if (desc->datacmp == NULL)
 		desc->datacmp = get_default_compressor();

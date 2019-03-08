@@ -281,12 +281,8 @@ static int alloc_file_ids(image_entry_t *list)
 int filelist_read(const char *filename, image_entry_t **out)
 {
 	image_entry_t *list = NULL;
-	input_file_t f;
 
-	if (open_file(&f, filename))
-		return -1;
-
-	if (process_file(&f, line_hooks, NUM_LINE_HOOKS, &list))
+	if (process_file(filename, line_hooks, NUM_LINE_HOOKS, &list))
 		goto fail;
 
 	if (list != NULL) {
@@ -296,11 +292,9 @@ int filelist_read(const char *filename, image_entry_t **out)
 			goto fail;
 	}
 
-	cleanup_file(&f);
 	*out = list;
 	return 0;
 fail:
-	cleanup_file(&f);
 	image_entry_free_list(list);
 	return -1;
 }
