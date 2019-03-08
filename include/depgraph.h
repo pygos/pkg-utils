@@ -1,28 +1,6 @@
 /* SPDX-License-Identifier: ISC */
-#ifndef INSTALL_H
-#define INSTALL_H
-
-#include <stdbool.h>
-#include <getopt.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
-#include <fcntl.h>
-
-#include "util/util.h"
-
-#include "filelist/image_entry.h"
-
-#include "pkgreader.h"
-#include "command.h"
-#include "pkgio.h"
-
-enum {
-	INSTALL_MODE_INSTALL = 0,
-	INSTALL_MODE_LIST_PKG,
-	INSTALL_MODE_LIST_FILES,
-};
+#ifndef DEPGRAPH_H
+#define DEPGRAPH_H
 
 struct pkg_dep_node {
 	char *name;
@@ -52,4 +30,4 @@ int collect_dependencies(int repofd, struct pkg_dep_list *list);
 
 int sort_by_dependencies(struct pkg_dep_list *list);
 
-#endif /* INSTALL_H */
+#endif /* DEPGRAPH_H */

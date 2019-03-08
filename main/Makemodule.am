@@ -1,7 +1,11 @@
 pkg_SOURCES = include/pkgformat.h include/pkgreader.h include/pkgio.h
 pkg_SOURCES += include/compressor.h include/command.h include/pkgwriter.h
+pkg_SOURCES += include/depgraph.h
 pkg_SOURCES += main/pkg.c main/compressor.c main/command.c main/pkgreader.c
 pkg_SOURCES += main/pkgwriter.c main/pkgio_rd_image_entry.c main/pkg_unpack.c
+pkg_SOURCES += main/depgraph/collect.c main/depgraph/pkglist.c
+pkg_SOURCES += main/depgraph/tsort.c
+
 pkg_CFLAGS = $(AM_CFLAGS)
 pkg_LDADD = libutil.a libfilelist.a
 
@@ -18,9 +22,7 @@ pkg_SOURCES += main/cmd/dump/dump.c main/cmd/dump/dump.h
 pkg_SOURCES += main/cmd/dump/dump_header.c
 
 # install command
-pkg_SOURCES += main/cmd/install/collect.c main/cmd/install/install.c
-pkg_SOURCES += main/cmd/install/install.h main/cmd/install/pkglist.c
-pkg_SOURCES += main/cmd/install/tsort.c
+pkg_SOURCES += main/cmd/install.c
 
 # buildstrategy command
 pkg_SOURCES += main/cmd/buildstrategy/buildstrategy.h

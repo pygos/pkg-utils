@@ -1,5 +1,8 @@
 /* SPDX-License-Identifier: ISC */
-#include "install.h"
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "depgraph.h"
 
 static void remove_dependency(struct pkg_dep_list *list,
 			      struct pkg_dep_node *pkg)

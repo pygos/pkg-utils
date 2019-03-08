@@ -1,5 +1,22 @@
 /* SPDX-License-Identifier: ISC */
-#include "install.h"
+#include <stdbool.h>
+#include <getopt.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <fcntl.h>
+
+#include "util/util.h"
+#include "depgraph.h"
+#include "command.h"
+#include "pkgio.h"
+
+enum {
+	INSTALL_MODE_INSTALL = 0,
+	INSTALL_MODE_LIST_PKG,
+	INSTALL_MODE_LIST_FILES,
+};
 
 static const struct option long_opts[] = {
 	{ "root", required_argument, NULL, 'r' },

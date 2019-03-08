@@ -1,5 +1,10 @@
 /* SPDX-License-Identifier: ISC */
-#include "install.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+#include "pkgreader.h"
+#include "depgraph.h"
 
 int collect_dependencies(int repofd, struct pkg_dep_list *list)
 {
