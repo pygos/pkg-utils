@@ -9,6 +9,7 @@
 #include <errno.h>
 
 #include "command.h"
+#include "util/util.h"
 #include "util/hashtable.h"
 
 enum {

@@ -1,8 +1,9 @@
 #include "pack.h"
 
-static int handle_requires(input_file_t *f, void *obj)
+static int handle_requires(char *line, const char *filename,
+			   size_t linenum, void *obj)
 {
-	char *ptr = f->line, *end;
+	char *ptr = line, *end;
 	pkg_desc_t *desc = obj;
 	dependency_t *dep;
 	size_t len;
@@ -19,13 +20,14 @@ static int handle_requires(input_file_t *f, void *obj)
 			break;
 
 		if (len > 0xFF) {
-			input_file_complain(f, "dependency name too long");
+			input_file_complain(filename, linenum, "dependency name too long");
 			return -1;
 		}
 
 		dep = calloc(1, sizeof(*dep) + len + 1);
 		if (dep == NULL) {
-			input_file_complain(f, "out of memory");
+			input_file_complain(filename, linenum,
+					    "out of memory");
 			return -1;
 		}
 
@@ -40,28 +42,30 @@ static int handle_requires(input_file_t *f, void *obj)
 	return 0;
 }
 
-static int handle_toc_compressor(input_file_t *f, void *obj)
+static int handle_toc_compressor(char *line, const char *filename,
+				 size_t linenum, void *obj)
 {
 	pkg_desc_t *desc = obj;
 
-	desc->toccmp = compressor_by_name(f->line);
+	desc->toccmp = compressor_by_name(line);
 
 	if (desc->toccmp == NULL) {
-		input_file_complain(f, "unkown compressor");
+		input_file_complain(filename, linenum, "unkown compressor");
 		return -1;
 	}
 
 	return 0;
 }
 
-static int handle_data_compressor(input_file_t *f, void *obj)
+static int handle_data_compressor(char *line, const char *filename,
+				  size_t linenum, void *obj)
 {
 	pkg_desc_t *desc = obj;
 
-	desc->datacmp = compressor_by_name(f->line);
+	desc->datacmp = compressor_by_name(line);
 
 	if (desc->datacmp == NULL) {
-		input_file_complain(f, "unkown compressor");
+		input_file_complain(filename, linenum, "unkown compressor");
 		return -1;
 	}
 

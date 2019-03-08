@@ -1,65 +1,37 @@
 #include "buildstrategy.h"
 
-typedef int (*line_handler_t)(const char *lhs, const char *rhs);
+typedef int (*line_handler_t)(const char *filename, size_t linenum,
+			      const char *lhs, const char *rhs);
+
+struct userdata {
+	line_handler_t cb;
+};
+
+static int handle_line(void *usr, const char *filename,
+		       size_t linenum, char *line)
+{
+	struct userdata *u = usr;
+	char *rhs;
+
+	rhs = strchr(line, ',');
+	if (rhs == NULL)
+		return 0;
+
+	*(rhs++) = '\0';
+	while (isspace(*rhs))
+		++rhs;
+
+	if (*line == '\0' || *rhs == '\0')
+		return 0;
+
+	return u->cb(filename, linenum, line, rhs);
+}
 
 static int foreach_line(const char *filename, line_handler_t cb)
 {
-	FILE *f = fopen(filename, "r");
+	struct userdata u = { cb };
 
-	for (;;) {
-		char *line = NULL, *rhs, *lhs, *ptr;
-		size_t n = 0;
-		ssize_t ret;
-
-		errno = 0;
-		ret = getline(&line, &n, f);
-
-		if (ret < 0) {
-			if (errno == 0) {
-				free(line);
-				break;
-			}
-			perror(filename);
-			free(line);
-			fclose(f);
-			return -1;
-		}
-
-		rhs = strchr(line, ',');
-		if (rhs == NULL) {
-			free(line);
-			continue;
-		}
-
-		*(rhs++) = '\0';
-		while (isspace(*rhs))
-			++rhs;
-
-		ptr = rhs;
-		while (*ptr != '\0' && !isspace(*ptr))
-			++ptr;
-		*ptr = '\0';
-
-		lhs = line;
-		while (isspace(*lhs))
-			++lhs;
-
-		if (*lhs == '\0' || *rhs == '\0') {
-			free(line);
-			continue;
-		}
-
-		if (cb(lhs, rhs)) {
-			free(line);
-			fclose(f);
-			return -1;
-		}
-
-		free(line);
-	}
-
-	fclose(f);
-	return 0;
+	return foreach_line_in_file(filename, &u, handle_line);
 }
 
 /*****************************************************************************/
@@ -67,7 +39,8 @@ static int foreach_line(const char *filename, line_handler_t cb)
 static hash_table_t tbl_provides;
 static hash_table_t tbl_sourcepkgs;
 
-static int handle_depends(const char *sourcepkg, const char *binpkg)
+static int handle_depends(const char *filename, size_t linenum,
+			  const char *sourcepkg, const char *binpkg)
 {
 	source_pkg_t *src, *dep;
 	size_t count;
@@ -79,8 +52,9 @@ static int handle_depends(const char *sourcepkg, const char *binpkg)
 
 	dep = hash_table_lookup(&tbl_provides, binpkg);
 	if (dep == NULL) {
-		fprintf(stderr, "nothing provides '%s' required by '%s'\n",
-			binpkg, sourcepkg);
+		fprintf(stderr,
+			"%s: %zu: nothing provides '%s' required by '%s'\n",
+			filename, linenum, binpkg, sourcepkg);
 		return -1;
 	}
 
@@ -100,14 +74,16 @@ static int handle_depends(const char *sourcepkg, const char *binpkg)
 	return 0;
 }
 
-static int handle_provides(const char *sourcepkg, const char *binpkg)
+static int handle_provides(const char *filename, size_t linenum,
+			   const char *sourcepkg, const char *binpkg)
 {
 	source_pkg_t *src = NULL;
 
 	src = hash_table_lookup(&tbl_provides, binpkg);
 	if (src != NULL) {
-		fprintf(stderr, "%s: package already provided by %s\n",
-			binpkg, src->name);
+		fprintf(stderr,
+			"%s: %zu: %s: package already provided by %s\n",
+			filename, linenum, binpkg, src->name);
 		return -1;
 	}
 

@@ -38,11 +38,14 @@ typedef struct {
 	char *name;
 } pkg_desc_t;
 
-int filelist_mkdir(input_file_t *f, void *obj);
+int filelist_mkdir(char *line, const char *filename,
+		   size_t linenum, void *obj);
 
-int filelist_mkslink(input_file_t *f, void *obj);
+int filelist_mkslink(char *line, const char *filename,
+		     size_t linenum, void *obj);
 
-int filelist_mkfile(input_file_t *f, void *obj);
+int filelist_mkfile(char *line, const char *filename,
+		    size_t linenum, void *obj);
 
 int filelist_read(const char *filename, image_entry_t **out);
 
