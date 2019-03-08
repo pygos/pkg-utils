@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #ifndef PKGWRITER_H
 #define PKGWRITER_H
 

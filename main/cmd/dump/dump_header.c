@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include "dump.h"
 
 static const char *dependency_type[] = {

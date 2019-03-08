@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #ifndef PKGREADER_H
 #define PKGREADER_H
 

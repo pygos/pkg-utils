@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include "pack.h"
 
 int write_header_data(pkg_writer_t *wr, pkg_desc_t *desc)

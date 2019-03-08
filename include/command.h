@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #ifndef COMMAND_H
 #define COMMAND_H
 

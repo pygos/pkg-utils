@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #ifndef IMAGE_ENTRY_H
 #define IMAGE_ENTRY_H
 

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <sys/stat.h>

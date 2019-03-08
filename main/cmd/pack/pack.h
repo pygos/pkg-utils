@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #ifndef PACK_H
 #define PACK_H
 

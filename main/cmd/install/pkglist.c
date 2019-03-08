@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include "install.h"
 
 struct pkg_dep_node *append_pkg(struct pkg_dep_list *list, const char *name)

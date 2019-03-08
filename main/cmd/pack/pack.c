@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include "pack.h"
 
 static const struct option long_opts[] = {

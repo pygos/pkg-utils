@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include "pack.h"
 
 static char *skipspace(char *str)

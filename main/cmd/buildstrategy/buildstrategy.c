@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include "buildstrategy.h"
 
 typedef int (*line_handler_t)(const char *filename, size_t linenum,

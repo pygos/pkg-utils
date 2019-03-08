@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include "install.h"
 
 int collect_dependencies(int repofd, struct pkg_dep_list *list)

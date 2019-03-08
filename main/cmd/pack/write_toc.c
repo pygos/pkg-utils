@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include "pack.h"
 
 static int write_entry(pkg_writer_t *wr, image_entry_t *it)

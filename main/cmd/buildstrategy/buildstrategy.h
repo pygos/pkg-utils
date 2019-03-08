@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #ifndef BUILDSTRATEGY_H
 #define BUILDSTRATEGY_H
 

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #include "install.h"
 
 static void remove_dependency(struct pkg_dep_list *list,

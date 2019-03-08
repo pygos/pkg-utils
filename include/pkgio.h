@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #ifndef PKGIO_H
 #define PKGIO_H
 

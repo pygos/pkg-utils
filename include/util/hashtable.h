@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ISC */
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H
 
