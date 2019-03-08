@@ -3,13 +3,12 @@
 
 static const struct option long_opts[] = {
 	{ "dependencies", no_argument, NULL, 'd' },
-	{ "list-files", no_argument, NULL, 'l' },
-	{ "format", required_argument, NULL, 'f' },
+	{ "list-files", required_argument, NULL, 'l' },
 	{ "root", required_argument, NULL, 'r' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "dlf:r:";
+static const char *short_opts = "dl:r:";
 
 static int cmd_dump(int argc, char **argv)
 {
@@ -26,13 +25,16 @@ static int cmd_dump(int argc, char **argv)
 			break;
 
 		switch (i) {
-		case 'f':
+		case 'l':
+			flags |= DUMP_TOC;
 			if (strcmp(optarg, "sqfs") == 0) {
 				format = TOC_FORMAT_SQFS;
 			} else if (strcmp(optarg, "initrd") == 0) {
 				format = TOC_FORMAT_INITRD;
 			} else if (strcmp(optarg, "pkg") == 0) {
 				format = TOC_FORMAT_PKG;
+			} else if (strcmp(optarg, "detail") == 0) {
+				format = TOC_FORMAT_PRETTY;
 			} else {
 				fprintf(stderr, "unknown format '%s'\n",
 					optarg);
@@ -42,9 +44,6 @@ static int cmd_dump(int argc, char **argv)
 			break;
 		case 'r':
 			root = optarg;
-			break;
-		case 'l':
-			flags |= DUMP_TOC;
 			break;
 		case 'd':
 			flags |= DUMP_DEPS;
@@ -103,25 +102,25 @@ static command_t dump = {
 "Possible options:\n"
 "  --dependencies, -d     Show dependency information of a package.\n"
 "\n"
-"  --list-files, -l       Produce a list of files. The format for the list\n"
-"                         can be specified with --format.\n"
+"  --list-files, -l <format>  Produce a list of files with a specified\n"
+"                             formating.\n"
 "\n"
-"  --format, -f <format>  Specify what format to use for printing the table\n"
-"                         of contents. Default is a pretty printed, human\n"
-"                         readable version.\n"
+"                             If \"detail\" is specified, a human readable,\n"
+"                             pretty printed format with details is used.\n"
 "\n"
-"                         If \"sqfs\" is specified, a squashfs pseudo file\n"
-"                         is genareated for setting permissions bits and\n"
-"                         ownership appropriately.\n"
+"                             If \"sqfs\" is specified, a squashfs pseudo\n"
+"                             file is genareated for setting permissions\n"
+"                             bits and ownership appropriately.\n"
 "\n"
-"                         If \"initrd\" is specified, a format appropriate\n"
-"                         for Linux gen_init_cpio is produced.\n"
+"                             If \"initrd\" is specified, the format of\n"
+"                             Linux gen_init_cpio is produced.\n"
 "\n"
-"  --root, -r <path>      If a format is used that requires absoulute input\n"
-"                         paths (e.g. initrd), prefix all file paths with\n"
-"                         this. Can be used, for instance to unpack a\n"
-"                         package to a staging directory and generate a\n"
-"                         a listing for Linux CONFIG_INITRAMFS_SOURCE.\n",
+"  --root, -r <path>          If a format is used that requires absoulute\n"
+"                             input paths (e.g. initrd), prefix all file\n"
+"                             paths with this. Can be used, for instance to\n"
+"                             unpack a package to a staging directory and\n"
+"                             generate a a listing for Linux\n"
+"                             CONFIG_INITRAMFS_SOURCE.\n",
 	.run_cmd = cmd_dump,
 };
 

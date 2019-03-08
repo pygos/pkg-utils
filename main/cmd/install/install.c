@@ -8,8 +8,7 @@ static const struct option long_opts[] = {
 	{ "no-dependencies", no_argument, NULL, 'd' },
 	{ "repo-dir", required_argument, NULL, 'R' },
 	{ "list-packages", no_argument, NULL, 'p' },
-	{ "list-files", no_argument, NULL, 'l' },
-	{ "format", required_argument, NULL, 'F' },
+	{ "list-files", required_argument, NULL, 'l' },
 	{ "no-symlinks", no_argument, NULL, 'L' },
 	{ "no-devices", no_argument, NULL, 'D' },
 	{ NULL, 0, NULL, 0 },
@@ -102,14 +101,14 @@ static int cmd_install(int argc, char **argv)
 			break;
 		case 'l':
 			mode = INSTALL_MODE_LIST_FILES;
-			break;
-		case 'F':
 			if (strcmp(optarg, "sqfs") == 0) {
 				format = TOC_FORMAT_SQFS;
 			} else if (strcmp(optarg, "initrd") == 0) {
 				format = TOC_FORMAT_INITRD;
 			} else if (strcmp(optarg, "pkg") == 0) {
 				format = TOC_FORMAT_PKG;
+			} else if (strcmp(optarg, "detail")) {
+				format = TOC_FORMAT_PRETTY;
 			} else {
 				fprintf(stderr, "unknown format '%s'\n",
 					optarg);
@@ -213,31 +212,33 @@ static command_t install = {
 "packages are evaluated and also installed.\n"
 "\n"
 "Possible options:\n"
-"  --repo-dir, -R <path>  Specify the input repository path to fetch the\n"
-"                         packages from.\n"
-"  --root, -r <path>      A root directory to unpack the package. Defaults\n"
-"                         to the current working directory if not set.\n"
-"  --no-chown, -o         Do not change ownership of the extracted data.\n"
-"                         Keep the uid/gid of the user who runs the program.\n"
-"  --no-chmod, -m         Do not change permission flags of the extarcted\n"
-"                         data. Use 0644 for all files and 0755 for all\n"
-"                         directories.\n"
-"  --no-dependencies, -d  Do not resolve dependencies, only install files\n"
-"                         packages listed on the command line.\n"
-"  --list-packages, -p    Do not install packages, print out final package\n"
-"                         list that would be installed.\n"
-"  --list-files, -l       Do not install packages, print out table of\n"
-"                         contents for all packages that would be installed.\n"
-"  --format, -F <format>  Specify what format to use for printing the table\n"
-"                         of contents. Default is a pretty printed, human\n"
-"                         readable version.\n"
+"  --repo-dir, -R <path>     Specify the input repository path to fetch the\n"
+"                            packages from.\n"
+"  --root, -r <path>         A root directory to unpack the package. Default\n"
+"                            if not set is the current working directory.\n"
+"  --no-chown, -o            Do not change ownership of the extracted data.\n"
+"                            Keep the uid/gid of the user who runs the \n"
+"                            program."
+"  --no-chmod, -m            Do not change permission flags of the extarcted\n"
+"                            data. Use 0644 for all files and 0755 for all\n"
+"                            directories.\n"
+"  --no-dependencies, -d     Do not resolve dependencies, only install files\n"
+"                            packages listed on the command line.\n"
+"  --list-packages, -p       Do not install packages, print out final\n"
+"                            package list that would be installed.\n"
+"  --list-files, -l <format> Do not install packages, print out table of\n"
+"                            contents for all packages that would be\n"
+"                            installed in a specified format.\n"
 "\n"
-"                         If \"sqfs\" is specified, a squashfs pseudo file\n"
-"                         is genareated for setting permissions bits and\n"
-"                         ownership appropriately.\n"
+"                            If \"detail\" is specified, a human readable,\n"
+"                            pretty printed format with details is used.\n"
 "\n"
-"                         If \"initrd\" is specified, a format appropriate\n"
-"                         for Linux gen_init_cpio is produced.\n",
+"                            If \"sqfs\" is specified, a squashfs pseudo\n"
+"                            file is genareated for setting permissions bits\n"
+"                            and ownership appropriately.\n"
+"\n"
+"                            If \"initrd\" is specified, the format of Linux\n"
+"                            gen_init_cpio is produced.\n",
 	.run_cmd = cmd_install,
 };
 
