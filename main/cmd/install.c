@@ -239,6 +239,8 @@ static command_t install = {
 "  --no-chmod, -m            Do not change permission flags of the extarcted\n"
 "                            data. Use 0644 for all files and 0755 for all\n"
 "                            directories.\n"
+"  --no-symlink, -L          Do not create symlinks.\n"
+"  --no-devices, -D          Do not create device files.\n"
 "  --no-dependencies, -d     Do not resolve dependencies, only install files\n"
 "                            packages listed on the command line.\n"
 "  --list-packages, -p       Do not install packages, print out final\n"
