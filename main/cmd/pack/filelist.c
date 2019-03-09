@@ -17,6 +17,7 @@ static image_entry_t *filelist_mkentry(char *line, const char *filename,
 				       size_t linenum, mode_t filetype)
 {
 	image_entry_t *ent;
+	char *start = line;
 	size_t i;
 
 	ent = calloc(1, sizeof(*ent));
@@ -117,7 +118,7 @@ static image_entry_t *filelist_mkentry(char *line, const char *filename,
 	line = skipspace(line);
 
 	/* remove processed data */
-	memmove(line, line, strlen(line) + 1);
+	memmove(start, line, strlen(line) + 1);
 	return ent;
 fail:
 	free(ent->name);
