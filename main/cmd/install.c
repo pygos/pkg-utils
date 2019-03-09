@@ -31,7 +31,7 @@ static const struct option long_opts[] = {
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "r:omdR:plF:LD";
+static const char *short_opts = "r:omdR:pl:F:LD";
 
 static int unpack_packages(int repofd, int rootfd, int flags,
 			   struct pkg_dep_list *list)
