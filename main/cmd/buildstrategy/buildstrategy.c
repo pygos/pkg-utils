@@ -116,8 +116,8 @@ fail:
 /*****************************************************************************/
 
 static const struct option long_opts[] = {
-	{ "provides", no_argument, NULL, 'p' },
-	{ "depends", no_argument, NULL, 'd' },
+	{ "provides", required_argument, NULL, 'p' },
+	{ "depends", required_argument, NULL, 'd' },
 	{ NULL, 0, NULL, 0 },
 };
 
@@ -156,7 +156,7 @@ static int process_args(int argc, char **argv)
 	}
 
 	if (hash_table_init(&tbl_provides, 1024))
-		return EXIT_FAILURE;
+		return -1;
 
 	if (hash_table_init(&tbl_sourcepkgs, 1024))
 		goto fail_provides;
