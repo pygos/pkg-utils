@@ -37,6 +37,7 @@ static int foreach_line(const char *filename, line_handler_t cb)
 
 /*****************************************************************************/
 
+static hash_table_t tbl_preferes;
 static hash_table_t tbl_provides;
 static hash_table_t tbl_sourcepkgs;
 
@@ -66,24 +67,80 @@ fail:
 	return NULL;
 }
 
+static source_pkg_t *get_provider(const char *parent, const char *binpkg)
+{
+	source_pkg_t *spkg, *pref;
+
+	spkg = hash_table_lookup(&tbl_provides, binpkg);
+	if (spkg == NULL)
+		goto fail_none;
+
+	pref = hash_table_lookup(&tbl_preferes, binpkg);
+
+	if (spkg->next != NULL) {
+		if (pref == NULL)
+			goto fail_no_pref;
+
+		while (spkg != NULL && strcmp(spkg->name, pref->name) != 0) {
+			spkg = spkg->next;
+		}
+
+		if (spkg == NULL) {
+			spkg = hash_table_lookup(&tbl_provides, binpkg);
+			goto fail_provider;
+		}
+	} else {
+		if (pref != NULL && strcmp(spkg->name, pref->name) != 0)
+			goto fail_provider;
+	}
+
+	return spkg;
+fail_none:
+	fprintf(stderr, "No source package provides binary package '%s'.\n\n",
+		binpkg);
+	goto fail;
+fail_provider:
+	fprintf(stderr,
+		"Preferred provider for binary package '%s' is set to\n"
+		"source package '%s', which does not provide '%s'.\n\n",
+		binpkg, pref->name, binpkg);
+	goto fail_list_providers;
+fail_no_pref:
+	fprintf(stderr, "No preferred provider set for "
+		"binary package '%s'.\n\n", binpkg);
+	goto fail_list_providers;
+fail_list_providers:
+	fprintf(stderr, "The following source packages provide the "
+		"binary package '%s':\n\n", binpkg);
+	while (spkg != NULL) {
+		fprintf(stderr, "\t%s\n", spkg->name);
+		spkg = spkg->next;
+	}
+	fputc('\n', stderr);
+	goto fail;
+fail:
+	if (parent != NULL) {
+		fprintf(stderr, "Binary package '%s' is required to "
+			"build source package '%s'\n", binpkg, parent);
+	}
+	return NULL;
+}
+
 static int handle_depends(const char *filename, size_t linenum,
 			  const char *sourcepkg, const char *binpkg)
 {
 	source_pkg_t *src, *dep;
 	size_t count;
 	void *new;
+	(void)filename; (void)linenum;
 
 	src = hash_table_lookup(&tbl_sourcepkgs, sourcepkg);
 	if (src == NULL)
 		return 0;
 
-	dep = hash_table_lookup(&tbl_provides, binpkg);
-	if (dep == NULL) {
-		fprintf(stderr,
-			"%s: %zu: nothing provides '%s' required by '%s'\n",
-			filename, linenum, binpkg, sourcepkg);
+	dep = get_provider(sourcepkg, binpkg);
+	if (dep == NULL)
 		return -1;
-	}
 
 	if ((src->num_depends % 10) == 0) {
 		count = src->num_depends + 10;
@@ -104,12 +161,29 @@ static int handle_depends(const char *filename, size_t linenum,
 static int handle_provides(const char *filename, size_t linenum,
 			   const char *sourcepkg, const char *binpkg)
 {
-	source_pkg_t *src = hash_table_lookup(&tbl_provides, binpkg);
+	source_pkg_t *head = hash_table_lookup(&tbl_provides, binpkg), *src;
+	(void)filename; (void)linenum;
+
+	if (head != NULL && strcmp(head->name, sourcepkg) == 0)
+		return 0;
+
+	src = get_src_pkg(sourcepkg);
+	if (src == NULL)
+		return -1;
+
+	src->next = head;
+	return hash_table_set(&tbl_provides, binpkg, src);
+}
+
+static int handle_prefere(const char *filename, size_t linenum,
+			  const char *binpkg, const char *sourcepkg)
+{
+	source_pkg_t *src = hash_table_lookup(&tbl_preferes, binpkg);
 
 	if (src != NULL) {
 		fprintf(stderr,
-			"%s: %zu: %s: package already provided by %s\n",
-			filename, linenum, binpkg, src->name);
+			"%s: %zu: preferred provider for %s already "
+			"set to %s\n", filename, linenum, binpkg, src->name);
 		return -1;
 	}
 
@@ -117,22 +191,23 @@ static int handle_provides(const char *filename, size_t linenum,
 	if (src == NULL)
 		return -1;
 
-	return hash_table_set(&tbl_provides, binpkg, src);
+	return hash_table_set(&tbl_preferes, binpkg, src);
 }
 
 /*****************************************************************************/
 
 static const struct option long_opts[] = {
+	{ "prefere", required_argument, NULL, 'P' },
 	{ "provides", required_argument, NULL, 'p' },
 	{ "depends", required_argument, NULL, 'd' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "p:d:";
+static const char *short_opts = "p:d:P:";
 
 static int process_args(int argc, char **argv)
 {
-	const char *provides = NULL, *depends = NULL;
+	const char *provides = NULL, *depends = NULL, *prefere = NULL;
 	int i;
 
 	for (;;) {
@@ -141,6 +216,9 @@ static int process_args(int argc, char **argv)
 			break;
 
 		switch (i) {
+		case 'P':
+			prefere = optarg;
+			break;
 		case 'p':
 			provides = optarg;
 			break;
@@ -168,13 +246,21 @@ static int process_args(int argc, char **argv)
 	if (hash_table_init(&tbl_sourcepkgs, 1024))
 		goto fail_provides;
 
-	if (foreach_line(provides, handle_provides))
+	if (hash_table_init(&tbl_preferes, 1024))
 		goto fail_srcpkg;
+
+	if (prefere != NULL && foreach_line(prefere, handle_prefere) != 0)
+		goto fail_prefere;
+
+	if (foreach_line(provides, handle_provides))
+		goto fail_prefere;
 
 	if (depends != NULL && foreach_line(depends, handle_depends) != 0)
-		goto fail_srcpkg;
+		goto fail_prefere;
 
 	return 0;
+fail_prefere:
+	hash_table_cleanup(&tbl_preferes);
 fail_srcpkg:
 	hash_table_cleanup(&tbl_sourcepkgs);
 fail_provides:
@@ -257,12 +343,9 @@ static int cmd_buildstrategy(int argc, char **argv)
 		return EXIT_FAILURE;
 
 	for (i = optind; i < argc; ++i) {
-		pkg = hash_table_lookup(&tbl_provides, argv[i]);
-
-		if (pkg == NULL) {
-			fprintf(stderr, "nothing provides '%s'\n", argv[i]);
+		pkg = get_provider(NULL, argv[i]);
+		if (pkg == NULL)
 			goto out;
-		}
 
 		pkg_mark_deps(pkg);
 	}
@@ -291,6 +374,7 @@ out:
 	hash_table_foreach(&tbl_sourcepkgs, &i, remove_untagged);
 	hash_table_cleanup(&tbl_sourcepkgs);
 	hash_table_cleanup(&tbl_provides);
+	hash_table_cleanup(&tbl_preferes);
 	return ret;
 }
 
@@ -313,7 +397,13 @@ static command_t buildstrategy = {
 "                         binary package.\n"
 "  --depends, -d <file>   A two column CSV file. Each line contains the name\n"
 "                         of a source package and a binary package that it\n"
-"                         requires to build.\n",
+"                         requires to build.\n"
+"  --prefere, -P <file>   A two column CSV file. Each line contains the name\n"
+"                         of a binary package and a source package that\n"
+"                         produces this binary. If the `--provides` file\n"
+"                         specifies that more than one source pacakge\n"
+"                         provides a binary package, this file contains the\n"
+"                         prefered one we should use.\n",
 	.run_cmd = cmd_buildstrategy,
 };
 

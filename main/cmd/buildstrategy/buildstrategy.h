@@ -18,6 +18,7 @@ enum {
 };
 
 typedef struct source_pkg_t {
+	struct source_pkg_t *next;
 	char *name;
 
 	struct source_pkg_t **depends;
