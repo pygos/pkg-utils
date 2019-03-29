@@ -40,6 +40,32 @@ static int foreach_line(const char *filename, line_handler_t cb)
 static hash_table_t tbl_provides;
 static hash_table_t tbl_sourcepkgs;
 
+static source_pkg_t *get_src_pkg(const char *name)
+{
+	source_pkg_t *src = hash_table_lookup(&tbl_sourcepkgs, name);
+
+	if (src == NULL) {
+		src = calloc(1, sizeof(*src));
+		if (src == NULL)
+			goto fail_oom;
+
+		src->name = strdup(name);
+		if (src->name == NULL)
+			goto fail_oom;
+
+		if (hash_table_set(&tbl_sourcepkgs, name, src))
+			goto fail;
+	}
+	return src;
+fail_oom:
+	fputs("out of memory\n", stderr);
+fail:
+	if (src != NULL)
+		free(src->name);
+	free(src);
+	return NULL;
+}
+
 static int handle_depends(const char *filename, size_t linenum,
 			  const char *sourcepkg, const char *binpkg)
 {
@@ -78,9 +104,8 @@ static int handle_depends(const char *filename, size_t linenum,
 static int handle_provides(const char *filename, size_t linenum,
 			   const char *sourcepkg, const char *binpkg)
 {
-	source_pkg_t *src = NULL;
+	source_pkg_t *src = hash_table_lookup(&tbl_provides, binpkg);
 
-	src = hash_table_lookup(&tbl_provides, binpkg);
 	if (src != NULL) {
 		fprintf(stderr,
 			"%s: %zu: %s: package already provided by %s\n",
@@ -88,29 +113,11 @@ static int handle_provides(const char *filename, size_t linenum,
 		return -1;
 	}
 
-	src = hash_table_lookup(&tbl_sourcepkgs, sourcepkg);
-
-	if (src == NULL) {
-		src = calloc(1, sizeof(*src));
-		if (src == NULL)
-			goto fail_oom;
-
-		src->name = strdup(sourcepkg);
-		if (src->name == NULL)
-			goto fail_oom;
-
-		if (hash_table_set(&tbl_sourcepkgs, sourcepkg, src))
-			goto fail;
-	}
+	src = get_src_pkg(sourcepkg);
+	if (src == NULL)
+		return -1;
 
 	return hash_table_set(&tbl_provides, binpkg, src);
-fail_oom:
-	fputs("out of memory\n", stderr);
-fail:
-	if (src != NULL)
-		free(src->name);
-	free(src);
-	return -1;
 }
 
 /*****************************************************************************/
