@@ -96,10 +96,32 @@ static const struct option long_opts[] = {
 
 static const char *short_opts = "p:d:P:";
 
-static int process_args(int argc, char **argv)
+static void pkg_mark_deps(source_pkg_t *pkg)
+{
+	size_t i;
+
+	if (pkg->flags & FLAG_BUILD_PKG)
+		return;
+
+	pkg->flags |= FLAG_BUILD_PKG;
+
+	for (i = 0; i < pkg->num_depends; ++i) {
+		if ((pkg->depends[i]->flags & FLAG_BUILD_PKG) == 0)
+			pkg_mark_deps(pkg->depends[i]);
+	}
+}
+
+static int cmd_buildstrategy(int argc, char **argv)
 {
 	const char *provides = NULL, *depends = NULL, *prefere = NULL;
-	int i;
+	int i, ret = EXIT_FAILURE;
+	source_pkg_t *pkg;
+
+	if (src_pkg_init())
+		return EXIT_FAILURE;
+
+	if (provider_init())
+		goto out_src;
 
 	for (;;) {
 		i = getopt_long(argc, argv, short_opts, long_opts, NULL);
@@ -132,53 +154,13 @@ static int process_args(int argc, char **argv)
 	}
 
 	if (prefere != NULL && foreach_line(prefere, handle_prefere) != 0)
-		return -1;
+		goto out;
 
 	if (foreach_line(provides, handle_provides))
-		return -1;
+		goto out;
 
 	if (depends != NULL && foreach_line(depends, handle_depends) != 0)
-		return -1;
-
-	return 0;
-fail_arg:
-	tell_read_help(argv[0]);
-	return -1;
-}
-
-static void pkg_mark_deps(source_pkg_t *pkg)
-{
-	size_t i;
-
-	if (pkg->flags & FLAG_BUILD_PKG)
-		return;
-
-	pkg->flags |= FLAG_BUILD_PKG;
-
-	for (i = 0; i < pkg->num_depends; ++i) {
-		if ((pkg->depends[i]->flags & FLAG_BUILD_PKG) == 0)
-			pkg_mark_deps(pkg->depends[i]);
-	}
-}
-
-static int cmd_buildstrategy(int argc, char **argv)
-{
-	int i, ret = EXIT_FAILURE;
-	source_pkg_t *pkg;
-
-	if (src_pkg_init())
-		return EXIT_FAILURE;
-
-	if (provider_init()) {
-		src_pkg_cleanup();
-		return EXIT_FAILURE;
-	}
-
-	if (process_args(argc, argv)) {
-		provider_cleanup();
-		src_pkg_cleanup();
-		return EXIT_FAILURE;
-	}
+		goto out;
 
 	for (i = optind; i < argc; ++i) {
 		pkg = provider_get(NULL, argv[i]);
@@ -194,8 +176,12 @@ static int cmd_buildstrategy(int argc, char **argv)
 	ret = EXIT_SUCCESS;
 out:
 	provider_cleanup();
+out_src:
 	src_pkg_cleanup();
 	return ret;
+fail_arg:
+	tell_read_help(argv[0]);
+	goto out;
 }
 
 static command_t buildstrategy = {
