@@ -27,4 +27,12 @@ typedef struct source_pkg_t {
 	int flags;
 } source_pkg_t;
 
+int src_pkg_init(void);
+
+void src_pkg_cleanup(void);
+
+source_pkg_t *src_pkg_get(const char *name);
+
+int src_pkg_output_build_order(void);
+
 #endif /* BUILDSTRATEGY_H */

@@ -39,33 +39,6 @@ static int foreach_line(const char *filename, line_handler_t cb)
 
 static hash_table_t tbl_preferes;
 static hash_table_t tbl_provides;
-static hash_table_t tbl_sourcepkgs;
-
-static source_pkg_t *get_src_pkg(const char *name)
-{
-	source_pkg_t *src = hash_table_lookup(&tbl_sourcepkgs, name);
-
-	if (src == NULL) {
-		src = calloc(1, sizeof(*src));
-		if (src == NULL)
-			goto fail_oom;
-
-		src->name = strdup(name);
-		if (src->name == NULL)
-			goto fail_oom;
-
-		if (hash_table_set(&tbl_sourcepkgs, name, src))
-			goto fail;
-	}
-	return src;
-fail_oom:
-	fputs("out of memory\n", stderr);
-fail:
-	if (src != NULL)
-		free(src->name);
-	free(src);
-	return NULL;
-}
 
 static source_pkg_t *get_provider(const char *parent, const char *binpkg)
 {
@@ -134,7 +107,7 @@ static int handle_depends(const char *filename, size_t linenum,
 	void *new;
 	(void)filename; (void)linenum;
 
-	src = hash_table_lookup(&tbl_sourcepkgs, sourcepkg);
+	src = src_pkg_get(sourcepkg);
 	if (src == NULL)
 		return 0;
 
@@ -167,7 +140,7 @@ static int handle_provides(const char *filename, size_t linenum,
 	if (head != NULL && strcmp(head->name, sourcepkg) == 0)
 		return 0;
 
-	src = get_src_pkg(sourcepkg);
+	src = src_pkg_get(sourcepkg);
 	if (src == NULL)
 		return -1;
 
@@ -187,7 +160,7 @@ static int handle_prefere(const char *filename, size_t linenum,
 		return -1;
 	}
 
-	src = get_src_pkg(sourcepkg);
+	src = src_pkg_get(sourcepkg);
 	if (src == NULL)
 		return -1;
 
@@ -243,11 +216,8 @@ static int process_args(int argc, char **argv)
 	if (hash_table_init(&tbl_provides, 1024))
 		return -1;
 
-	if (hash_table_init(&tbl_sourcepkgs, 1024))
-		goto fail_provides;
-
 	if (hash_table_init(&tbl_preferes, 1024))
-		goto fail_srcpkg;
+		goto fail_provides;
 
 	if (prefere != NULL && foreach_line(prefere, handle_prefere) != 0)
 		goto fail_prefere;
@@ -261,8 +231,6 @@ static int process_args(int argc, char **argv)
 	return 0;
 fail_prefere:
 	hash_table_cleanup(&tbl_preferes);
-fail_srcpkg:
-	hash_table_cleanup(&tbl_sourcepkgs);
 fail_provides:
 	hash_table_cleanup(&tbl_provides);
 	return -1;
@@ -286,61 +254,18 @@ static void pkg_mark_deps(source_pkg_t *pkg)
 	}
 }
 
-static int remove_untagged(void *usr, const char *name, void *p)
-{
-	int mask = *((int *)usr);
-	source_pkg_t *pkg = p;
-	(void)name;
-
-	if ((pkg->flags & mask) == 0) {
-		free(pkg->name);
-		free(pkg->depends);
-		free(pkg);
-		return 1;
-	}
-
-	return 0;
-}
-
-static int remove_unmarked_deps(void *usr, const char *name, void *p)
-{
-	source_pkg_t *pkg = p;
-	size_t i = 0;
-	(void)usr; (void)name;
-
-	while (i < pkg->num_depends) {
-		if ((pkg->depends[i]->flags & FLAG_BUILD_PKG) == 0) {
-			pkg->depends[i] = pkg->depends[pkg->num_depends - 1];
-			pkg->num_depends -= 1;
-		} else {
-			++i;
-		}
-	}
-
-	return 0;
-}
-
-static int find_no_dep(void *usr, const char *name, void *p)
-{
-	source_pkg_t *pkg = p;
-	int *found = usr;
-
-	if (pkg->num_depends == 0) {
-		printf("%s\n", name);
-		pkg->flags &= ~FLAG_BUILD_PKG;
-		*found = 1;
-	}
-
-	return 0;
-}
-
 static int cmd_buildstrategy(int argc, char **argv)
 {
 	int i, ret = EXIT_FAILURE;
 	source_pkg_t *pkg;
 
-	if (process_args(argc, argv))
+	if (src_pkg_init())
 		return EXIT_FAILURE;
+
+	if (process_args(argc, argv)) {
+		src_pkg_cleanup();
+		return EXIT_FAILURE;
+	}
 
 	for (i = optind; i < argc; ++i) {
 		pkg = get_provider(NULL, argv[i]);
@@ -350,29 +275,12 @@ static int cmd_buildstrategy(int argc, char **argv)
 		pkg_mark_deps(pkg);
 	}
 
-	i = FLAG_BUILD_PKG;
-	hash_table_foreach(&tbl_sourcepkgs, &i, remove_untagged);
-
-	while (tbl_sourcepkgs.count > 0) {
-		i = 0;
-		hash_table_foreach(&tbl_sourcepkgs, &i, find_no_dep);
-		if (!i) {
-			fputs("cycle detected in package dependencies!\n",
-			      stderr);
-			goto out;
-		}
-
-		hash_table_foreach(&tbl_sourcepkgs, NULL, remove_unmarked_deps);
-
-		i = FLAG_BUILD_PKG;
-		hash_table_foreach(&tbl_sourcepkgs, &i, remove_untagged);
-	}
+	if (src_pkg_output_build_order())
+		goto out;
 
 	ret = EXIT_SUCCESS;
 out:
-	i = 0;
-	hash_table_foreach(&tbl_sourcepkgs, &i, remove_untagged);
-	hash_table_cleanup(&tbl_sourcepkgs);
+	src_pkg_cleanup();
 	hash_table_cleanup(&tbl_provides);
 	hash_table_cleanup(&tbl_preferes);
 	return ret;
