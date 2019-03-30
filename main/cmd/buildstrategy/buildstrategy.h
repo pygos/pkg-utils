@@ -35,4 +35,14 @@ source_pkg_t *src_pkg_get(const char *name);
 
 int src_pkg_output_build_order(void);
 
+int provider_init(void);
+
+void provider_cleanup(void);
+
+int provider_add(const char *sourcepkg, const char *binpkg);
+
+int provider_add_prefered(const char *binpkg, const char *sourcepkg);
+
+source_pkg_t *provider_get(const char *parent, const char *binpkg);
+
 #endif /* BUILDSTRATEGY_H */

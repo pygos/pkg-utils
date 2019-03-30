@@ -37,68 +37,6 @@ static int foreach_line(const char *filename, line_handler_t cb)
 
 /*****************************************************************************/
 
-static hash_table_t tbl_preferes;
-static hash_table_t tbl_provides;
-
-static source_pkg_t *get_provider(const char *parent, const char *binpkg)
-{
-	source_pkg_t *spkg, *pref;
-
-	spkg = hash_table_lookup(&tbl_provides, binpkg);
-	if (spkg == NULL)
-		goto fail_none;
-
-	pref = hash_table_lookup(&tbl_preferes, binpkg);
-
-	if (spkg->next != NULL) {
-		if (pref == NULL)
-			goto fail_no_pref;
-
-		while (spkg != NULL && strcmp(spkg->name, pref->name) != 0) {
-			spkg = spkg->next;
-		}
-
-		if (spkg == NULL) {
-			spkg = hash_table_lookup(&tbl_provides, binpkg);
-			goto fail_provider;
-		}
-	} else {
-		if (pref != NULL && strcmp(spkg->name, pref->name) != 0)
-			goto fail_provider;
-	}
-
-	return spkg;
-fail_none:
-	fprintf(stderr, "No source package provides binary package '%s'.\n\n",
-		binpkg);
-	goto fail;
-fail_provider:
-	fprintf(stderr,
-		"Preferred provider for binary package '%s' is set to\n"
-		"source package '%s', which does not provide '%s'.\n\n",
-		binpkg, pref->name, binpkg);
-	goto fail_list_providers;
-fail_no_pref:
-	fprintf(stderr, "No preferred provider set for "
-		"binary package '%s'.\n\n", binpkg);
-	goto fail_list_providers;
-fail_list_providers:
-	fprintf(stderr, "The following source packages provide the "
-		"binary package '%s':\n\n", binpkg);
-	while (spkg != NULL) {
-		fprintf(stderr, "\t%s\n", spkg->name);
-		spkg = spkg->next;
-	}
-	fputc('\n', stderr);
-	goto fail;
-fail:
-	if (parent != NULL) {
-		fprintf(stderr, "Binary package '%s' is required to "
-			"build source package '%s'\n", binpkg, parent);
-	}
-	return NULL;
-}
-
 static int handle_depends(const char *filename, size_t linenum,
 			  const char *sourcepkg, const char *binpkg)
 {
@@ -111,7 +49,7 @@ static int handle_depends(const char *filename, size_t linenum,
 	if (src == NULL)
 		return 0;
 
-	dep = get_provider(sourcepkg, binpkg);
+	dep = provider_get(sourcepkg, binpkg);
 	if (dep == NULL)
 		return -1;
 
@@ -134,37 +72,17 @@ static int handle_depends(const char *filename, size_t linenum,
 static int handle_provides(const char *filename, size_t linenum,
 			   const char *sourcepkg, const char *binpkg)
 {
-	source_pkg_t *head = hash_table_lookup(&tbl_provides, binpkg), *src;
 	(void)filename; (void)linenum;
 
-	if (head != NULL && strcmp(head->name, sourcepkg) == 0)
-		return 0;
-
-	src = src_pkg_get(sourcepkg);
-	if (src == NULL)
-		return -1;
-
-	src->next = head;
-	return hash_table_set(&tbl_provides, binpkg, src);
+	return provider_add(sourcepkg, binpkg);
 }
 
 static int handle_prefere(const char *filename, size_t linenum,
 			  const char *binpkg, const char *sourcepkg)
 {
-	source_pkg_t *src = hash_table_lookup(&tbl_preferes, binpkg);
+	(void)filename; (void)linenum;
 
-	if (src != NULL) {
-		fprintf(stderr,
-			"%s: %zu: preferred provider for %s already "
-			"set to %s\n", filename, linenum, binpkg, src->name);
-		return -1;
-	}
-
-	src = src_pkg_get(sourcepkg);
-	if (src == NULL)
-		return -1;
-
-	return hash_table_set(&tbl_preferes, binpkg, src);
+	return provider_add_prefered(binpkg, sourcepkg);
 }
 
 /*****************************************************************************/
@@ -213,27 +131,16 @@ static int process_args(int argc, char **argv)
 		goto fail_arg;
 	}
 
-	if (hash_table_init(&tbl_provides, 1024))
+	if (prefere != NULL && foreach_line(prefere, handle_prefere) != 0)
 		return -1;
 
-	if (hash_table_init(&tbl_preferes, 1024))
-		goto fail_provides;
-
-	if (prefere != NULL && foreach_line(prefere, handle_prefere) != 0)
-		goto fail_prefere;
-
 	if (foreach_line(provides, handle_provides))
-		goto fail_prefere;
+		return -1;
 
 	if (depends != NULL && foreach_line(depends, handle_depends) != 0)
-		goto fail_prefere;
+		return -1;
 
 	return 0;
-fail_prefere:
-	hash_table_cleanup(&tbl_preferes);
-fail_provides:
-	hash_table_cleanup(&tbl_provides);
-	return -1;
 fail_arg:
 	tell_read_help(argv[0]);
 	return -1;
@@ -262,13 +169,19 @@ static int cmd_buildstrategy(int argc, char **argv)
 	if (src_pkg_init())
 		return EXIT_FAILURE;
 
+	if (provider_init()) {
+		src_pkg_cleanup();
+		return EXIT_FAILURE;
+	}
+
 	if (process_args(argc, argv)) {
+		provider_cleanup();
 		src_pkg_cleanup();
 		return EXIT_FAILURE;
 	}
 
 	for (i = optind; i < argc; ++i) {
-		pkg = get_provider(NULL, argv[i]);
+		pkg = provider_get(NULL, argv[i]);
 		if (pkg == NULL)
 			goto out;
 
@@ -280,9 +193,8 @@ static int cmd_buildstrategy(int argc, char **argv)
 
 	ret = EXIT_SUCCESS;
 out:
+	provider_cleanup();
 	src_pkg_cleanup();
-	hash_table_cleanup(&tbl_provides);
-	hash_table_cleanup(&tbl_preferes);
 	return ret;
 }
 

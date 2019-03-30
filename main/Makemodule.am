@@ -28,6 +28,7 @@ pkg_SOURCES += main/cmd/install.c
 pkg_SOURCES += main/cmd/buildstrategy/buildstrategy.h
 pkg_SOURCES += main/cmd/buildstrategy/buildstrategy.c
 pkg_SOURCES += main/cmd/buildstrategy/srcpkg.c
+pkg_SOURCES += main/cmd/buildstrategy/provider.c
 
 # depgraph command
 pkg_SOURCES += main/cmd/depgraph.c
