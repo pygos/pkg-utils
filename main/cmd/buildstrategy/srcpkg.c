@@ -122,3 +122,24 @@ int src_pkg_output_build_order(void)
 
 	return 0;
 }
+
+static int print_cluster(void *usr, const char *name, void *p)
+{
+	source_pkg_t *pkg = p;
+	size_t i;
+	(void)usr;
+
+	if (!(pkg->flags & FLAG_BUILD_PKG))
+		return 0;
+
+	for (i = 0; i < pkg->num_depends; ++i) {
+		printf("\t\"%s\" -> \"%s\"\n",
+		       name, pkg->depends[i]->name);
+	}
+	return 0;
+}
+
+void src_pkg_print_graph_cluster(void)
+{
+	hash_table_foreach(&tbl_sourcepkgs, NULL, print_cluster);
+}

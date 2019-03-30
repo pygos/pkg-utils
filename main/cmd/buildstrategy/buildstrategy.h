@@ -17,6 +17,11 @@ enum {
 	FLAG_BUILD_PKG = 0x01,
 };
 
+enum {
+	MODE_BUILD_ORDER = 0,
+	MODE_BUILD_GRAPH,
+};
+
 typedef struct source_pkg_t {
 	struct source_pkg_t *next;
 	char *name;
@@ -44,5 +49,7 @@ int provider_add(const char *sourcepkg, const char *binpkg);
 int provider_add_prefered(const char *binpkg, const char *sourcepkg);
 
 source_pkg_t *provider_get(const char *parent, const char *binpkg);
+
+void src_pkg_print_graph_cluster(void);
 
 #endif /* BUILDSTRATEGY_H */

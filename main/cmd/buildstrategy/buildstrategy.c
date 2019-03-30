@@ -91,10 +91,11 @@ static const struct option long_opts[] = {
 	{ "prefere", required_argument, NULL, 'P' },
 	{ "provides", required_argument, NULL, 'p' },
 	{ "depends", required_argument, NULL, 'd' },
+	{ "graph", no_argument, NULL, 'g' },
 	{ NULL, 0, NULL, 0 },
 };
 
-static const char *short_opts = "p:d:P:";
+static const char *short_opts = "p:d:P:g";
 
 static void pkg_mark_deps(source_pkg_t *pkg)
 {
@@ -114,7 +115,7 @@ static void pkg_mark_deps(source_pkg_t *pkg)
 static int cmd_buildstrategy(int argc, char **argv)
 {
 	const char *provides = NULL, *depends = NULL, *prefere = NULL;
-	int i, ret = EXIT_FAILURE;
+	int i, ret = EXIT_FAILURE, mode = MODE_BUILD_ORDER;
 	source_pkg_t *pkg;
 
 	if (src_pkg_init())
@@ -137,6 +138,9 @@ static int cmd_buildstrategy(int argc, char **argv)
 			break;
 		case 'd':
 			depends = optarg;
+			break;
+		case 'g':
+			mode = MODE_BUILD_GRAPH;
 			break;
 		default:
 			goto fail_arg;
@@ -170,8 +174,17 @@ static int cmd_buildstrategy(int argc, char **argv)
 		pkg_mark_deps(pkg);
 	}
 
-	if (src_pkg_output_build_order())
-		goto out;
+	switch (mode) {
+	case MODE_BUILD_GRAPH:
+		fputs("digraph buildgraph {\n\tcompound=true;\n", stdout);
+		src_pkg_print_graph_cluster();
+		fputs("}\n", stdout);
+		break;
+	default:
+		if (src_pkg_output_build_order())
+			goto out;
+		break;
+	}
 
 	ret = EXIT_SUCCESS;
 out:
@@ -209,7 +222,9 @@ static command_t buildstrategy = {
 "                         produces this binary. If the `--provides` file\n"
 "                         specifies that more than one source pacakge\n"
 "                         provides a binary package, this file contains the\n"
-"                         prefered one we should use.\n",
+"                         prefered one we should use.\n"
+"  --graph, -g            Instead of printing out an ordered list, produce\n"
+"                         a dot graph of the source packages to be built.\n",
 	.run_cmd = cmd_buildstrategy,
 };
 
