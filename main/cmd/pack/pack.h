@@ -22,8 +22,8 @@
 #include "filelist/image_entry.h"
 
 #include "comp/compressor.h"
-#include "pkgformat.h"
-#include "pkgwriter.h"
+#include "pkg/pkgformat.h"
+#include "pkg/pkgwriter.h"
 #include "command.h"
 
 typedef struct dependency_t {

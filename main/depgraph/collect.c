@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "pkgreader.h"
+#include "pkg/pkgreader.h"
 #include "depgraph.h"
 
 int collect_dependencies(int repofd, struct pkg_dep_list *list)

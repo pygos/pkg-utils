@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <sys/types.h>
 
-#include "pkgformat.h"
+#include "pkg/pkgformat.h"
 
 typedef struct compressor_stream_t {
 	ssize_t (*write)(struct compressor_stream_t *stream, const uint8_t *in,

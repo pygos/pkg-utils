@@ -7,9 +7,9 @@
 
 #include "util/util.h"
 
-#include "pkgreader.h"
+#include "pkg/pkgreader.h"
+#include "pkg/pkgio.h"
 #include "command.h"
-#include "pkgio.h"
 
 static const struct option long_opts[] = {
 	{ "root", required_argument, NULL, 'r' },

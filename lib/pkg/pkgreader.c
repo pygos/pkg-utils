@@ -10,7 +10,7 @@
 
 #include "comp/compressor.h"
 #include "util/util.h"
-#include "pkgreader.h"
+#include "pkg/pkgreader.h"
 
 struct pkg_reader_t {
 	int fd;

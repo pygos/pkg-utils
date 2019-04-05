@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "pkgio.h"
+#include "pkg/pkgio.h"
 #include "util/util.h"
 
 static int create_hierarchy(int dirfd, image_entry_t *list, int flags)

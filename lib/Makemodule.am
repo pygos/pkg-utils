@@ -28,4 +28,9 @@ libcomp_a_CFLAGS += $(XZ_CFLAGS)
 libcomp_a_CPPFLAGS += -DWITH_LZMA
 endif
 
-noinst_LIBRARIES += libutil.a libfilelist.a libcomp.a
+libpkg_a_SOURCES = include/pkg/pkgformat.h include/pkg/pkgreader.h
+libpkg_a_SOURCES += include/pkg/pkgio.h include/pkg/pkgwriter.h
+libpkg_a_SOURCES += lib/pkg/pkgreader.c lib/pkg/pkgwriter.c
+libpkg_a_SOURCES += lib/pkg/pkg_unpack.c lib/pkg/pkgio_rd_image_entry.c
+
+noinst_LIBRARIES += libutil.a libfilelist.a libcomp.a libpkg.a

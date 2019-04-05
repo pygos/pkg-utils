@@ -1,12 +1,10 @@
-pkg_SOURCES = include/pkgformat.h include/pkgreader.h include/pkgio.h
-pkg_SOURCES += include/command.h include/pkgwriter.h include/depgraph.h
-pkg_SOURCES += main/pkg.c main/command.c main/pkgreader.c
-pkg_SOURCES += main/pkgwriter.c main/pkgio_rd_image_entry.c main/pkg_unpack.c
+pkg_SOURCES = include/command.h include/depgraph.h
+pkg_SOURCES += main/pkg.c main/command.c
 pkg_SOURCES += main/depgraph/collect.c main/depgraph/pkglist.c
 pkg_SOURCES += main/depgraph/tsort.c
 
 pkg_CFLAGS = $(AM_CFLAGS)
-pkg_LDADD = libutil.a libfilelist.a libcomp.a
+pkg_LDADD = libpkg.a libutil.a libfilelist.a libcomp.a
 
 ##### commands #####
 

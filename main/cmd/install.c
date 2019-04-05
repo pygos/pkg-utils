@@ -7,10 +7,10 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+#include "pkg/pkgio.h"
 #include "util/util.h"
 #include "depgraph.h"
 #include "command.h"
-#include "pkgio.h"
 
 enum {
 	INSTALL_MODE_INSTALL = 0,

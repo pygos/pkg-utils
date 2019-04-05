@@ -12,10 +12,11 @@
 
 #include "filelist/image_entry.h"
 
-#include "pkgformat.h"
-#include "pkgreader.h"
+#include "pkg/pkgformat.h"
+#include "pkg/pkgreader.h"
+#include "pkg/pkgio.h"
+
 #include "command.h"
-#include "pkgio.h"
 
 typedef enum {
 	DUMP_TOC = 0x01,
