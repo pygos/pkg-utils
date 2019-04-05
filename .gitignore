@@ -18,3 +18,4 @@ config.h
 *.a
 *~
 pkg
+pkg2sqfs

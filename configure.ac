@@ -50,6 +50,10 @@ PKG_CHECK_MODULES(XZ, [liblzma >= 5.0.0], [have_lzma="yes"], [])
 AM_CONDITIONAL([WITH_ZLIB], [test "x$have_zlib" == "xyes"])
 AM_CONDITIONAL([WITH_LZMA], [test "x$have_lzma" == "xyes"])
 
+AM_CONDITIONAL([HAVE_LIBBSD], [true])
+PKG_CHECK_MODULES(LIBBSD, [libbsd], [],
+				    [AC_MSG_ERROR([missing libbsd])])
+
 ##### generate output #####
 
 AC_CONFIG_HEADERS([config.h])

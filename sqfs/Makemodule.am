@@ -1,0 +1,22 @@
+pkg2sqfs_SOURCES = sqfs/squashfs.h sqfs/super.c sqfs/pkg2sqfs.c
+pkg2sqfs_SOURCES += sqfs/vfs.c sqfs/pkg2sqfs.h sqfs/block.c
+pkg2sqfs_SOURCES += sqfs/meta.c sqfs/meta_writer.c sqfs/table.c
+pkg2sqfs_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/sqfs
+pkg2sqfs_CFLAGS = $(AM_CFLAGS)
+pkg2sqfs_LDADD = libpkg.a libutil.a libfilelist.a libcomp.a
+
+if WITH_LZMA
+pkg2sqfs_LDADD += $(XZ_LIBS)
+endif
+
+if WITH_ZLIB
+pkg2sqfs_LDADD += $(ZLIB_LIBS)
+endif
+
+if HAVE_LIBBSD
+pkg2sqfs_CPPFLAGS += -DHAVE_LIBBSD
+pkg2sqfs_CFLAGS += $(LIBBSD_CFLAGS)
+pkg2sqfs_LDADD += $(LIBBSD_LIBS)
+endif
+
+bin_PROGRAMS += pkg2sqfs
