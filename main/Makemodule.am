@@ -1,8 +1,9 @@
-pkg_SOURCES = include/command.h include/depgraph.h
+pkg_SOURCES = main/command.h main/depgraph.h
 pkg_SOURCES += main/pkg.c main/command.c
 pkg_SOURCES += main/depgraph/collect.c main/depgraph/pkglist.c
 pkg_SOURCES += main/depgraph/tsort.c
 
+pkg_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/main
 pkg_CFLAGS = $(AM_CFLAGS)
 pkg_LDADD = libpkg.a libutil.a libfilelist.a libcomp.a
 
