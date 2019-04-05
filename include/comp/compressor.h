@@ -29,16 +29,8 @@ typedef struct compressor_t {
 	compressor_stream_t *(*uncompression_stream)(struct compressor_t *cmp);
 } compressor_t;
 
-void compressor_register(compressor_t *compressor);
-
 compressor_t *compressor_by_name(const char *name);
 
 compressor_t *compressor_by_id(PKG_COMPRESSION id);
-
-#define REGISTER_COMPRESSOR(compressor) \
-	static void __attribute__((constructor)) register_##compressor(void) \
-	{ \
-		compressor_register((compressor_t *)&compressor); \
-	}
 
 #endif /* COMPRESSOR_H */

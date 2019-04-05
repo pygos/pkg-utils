@@ -4,8 +4,8 @@
 
 #include <stdbool.h>
 
+#include "comp/compressor.h"
 #include "pkgformat.h"
-#include "compressor.h"
 
 typedef struct pkg_writer_t pkg_writer_t;
 

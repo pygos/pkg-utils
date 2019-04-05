@@ -8,9 +8,9 @@
 #include <errno.h>
 #include <ctype.h>
 
+#include "comp/compressor.h"
 #include "util/util.h"
 #include "pkgreader.h"
-#include "compressor.h"
 
 struct pkg_reader_t {
 	int fd;

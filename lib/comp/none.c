@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <zlib.h>
 
-#include "compressor.h"
+#include "internal.h"
 
 #define CHUNK_SIZE 16384
 
@@ -81,11 +81,9 @@ static compressor_stream_t *create_dummy_stream(compressor_t *cmp)
 	return base;
 }
 
-static compressor_t none = {
+compressor_t comp_none = {
 	.name = "none",
 	.id = PKG_COMPRESSION_NONE,
 	.compression_stream = create_dummy_stream,
 	.uncompression_stream = create_dummy_stream,
 };
-
-REGISTER_COMPRESSOR(none)

@@ -1,13 +1,12 @@
 pkg_SOURCES = include/pkgformat.h include/pkgreader.h include/pkgio.h
-pkg_SOURCES += include/compressor.h include/command.h include/pkgwriter.h
-pkg_SOURCES += include/depgraph.h
-pkg_SOURCES += main/pkg.c main/compressor.c main/command.c main/pkgreader.c
+pkg_SOURCES += include/command.h include/pkgwriter.h include/depgraph.h
+pkg_SOURCES += main/pkg.c main/command.c main/pkgreader.c
 pkg_SOURCES += main/pkgwriter.c main/pkgio_rd_image_entry.c main/pkg_unpack.c
 pkg_SOURCES += main/depgraph/collect.c main/depgraph/pkglist.c
 pkg_SOURCES += main/depgraph/tsort.c
 
 pkg_CFLAGS = $(AM_CFLAGS)
-pkg_LDADD = libutil.a libfilelist.a
+pkg_LDADD = libutil.a libfilelist.a libcomp.a
 
 ##### commands #####
 
@@ -40,24 +39,12 @@ pkg_SOURCES += main/cmd/unpack.c
 pkg_SOURCES += main/cmd/help.c
 
 ##### compressors #####
-
-# dummy compressor
-pkg_SOURCES += main/compressors/none.c
-
-# zlib compressor
-if WITH_ZLIB
-pkg_SOURCES += main/compressors/zlib.c
-
-pkg_CFLAGS += $(ZLIB_CFLAGS)
-pkg_LDADD += $(ZLIB_LIBS)
+if WITH_LZMA
+pkg_LDADD += $(XZ_LIBS)
 endif
 
-# lzma compressor
-if WITH_LZMA
-pkg_SOURCES += main/compressors/lzma.c
-
-pkg_CFLAGS += $(XZ_CFLAGS)
-pkg_LDADD += $(XZ_LIBS)
+if WITH_ZLIB
+pkg_LDADD += $(ZLIB_LIBS)
 endif
 
 bin_PROGRAMS += pkg

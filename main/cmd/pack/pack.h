@@ -21,7 +21,7 @@
 
 #include "filelist/image_entry.h"
 
-#include "compressor.h"
+#include "comp/compressor.h"
 #include "pkgformat.h"
 #include "pkgwriter.h"
 #include "command.h"

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <zlib.h>
 
-#include "compressor.h"
+#include "internal.h"
 
 #define CHUNK_SIZE 16384
 
@@ -159,11 +159,9 @@ static compressor_stream_t *zlib_uncompress(compressor_t *cmp)
 	return create_stream(false);
 }
 
-static compressor_t zlib = {
+compressor_t comp_zlib = {
 	.name = "zlib",
 	.id = PKG_COMPRESSION_ZLIB,
 	.compression_stream = zlib_compress,
 	.uncompression_stream = zlib_uncompress,
 };
-
-REGISTER_COMPRESSOR(zlib)

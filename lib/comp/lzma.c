@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <lzma.h>
 
-#include "compressor.h"
+#include "internal.h"
 
 #define CHUNK_SIZE 16384
 
@@ -160,11 +160,9 @@ static compressor_stream_t *lzma_uncompress(compressor_t *cmp)
 	return create_stream(false);
 }
 
-static compressor_t lzma = {
+compressor_t comp_lzma = {
 	.name = "lzma",
 	.id = PKG_COMPRESSION_LZMA,
 	.compression_stream = lzma_compress,
 	.uncompression_stream = lzma_uncompress,
 };
-
-REGISTER_COMPRESSOR(lzma)

@@ -9,4 +9,23 @@ libfilelist_a_SOURCES = lib/filelist/dump_toc.c lib/filelist/image_entry.c
 libfilelist_a_SOURCES += lib/filelist/image_entry_sort.c
 libfilelist_a_SOURCES += include/filelist/image_entry.h
 
-noinst_LIBRARIES += libutil.a libfilelist.a
+libcomp_a_SOURCES = lib/comp/compressor.c lib/comp/none.c
+libcomp_a_SOURCES += include/comp/compressor.h lib/comp/internal.h
+libcomp_a_CFLAGS = $(AM_CFLAGS)
+libcomp_a_CPPFLAGS = $(AM_CPPFLAGS)
+
+if WITH_ZLIB
+libcomp_a_SOURCES += lib/comp/zlib.c
+
+libcomp_a_CFLAGS += $(ZLIB_CFLAGS)
+libcomp_a_CPPFLAGS += -DWITH_ZLIB
+endif
+
+if WITH_LZMA
+libcomp_a_SOURCES += lib/comp/lzma.c
+
+libcomp_a_CFLAGS += $(XZ_CFLAGS)
+libcomp_a_CPPFLAGS += -DWITH_LZMA
+endif
+
+noinst_LIBRARIES += libutil.a libfilelist.a libcomp.a
