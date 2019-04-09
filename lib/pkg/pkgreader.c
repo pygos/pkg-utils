@@ -235,26 +235,32 @@ record_t *pkg_reader_current_record_header(pkg_reader_t *rd)
 
 ssize_t pkg_reader_read_payload(pkg_reader_t *rd, void *out, size_t size)
 {
-	ssize_t ret;
+	ssize_t ret, total = 0;
 
-	if (rd->have_error)
-		return -1;
+	do {
+		if (rd->have_error)
+			return -1;
 
-	if (rd->have_eof || rd->offset_raw == rd->current.raw_size)
-		return 0;
+		if (rd->have_eof || rd->offset_raw == rd->current.raw_size)
+			break;
 
-	if (prefetch_compressed(rd))
-		return -1;
+		if (prefetch_compressed(rd))
+			return -1;
 
-	if (size >= (rd->current.raw_size - rd->offset_raw))
-		rd->stream->flush(rd->stream);
+		if (size >= (rd->current.raw_size - rd->offset_raw))
+			rd->stream->flush(rd->stream);
 
-	ret = rd->stream->read(rd->stream, out, size);
-	if (ret < 0)
-		return -1;
+		ret = rd->stream->read(rd->stream, out, size);
+		if (ret < 0)
+			return -1;
 
-	rd->offset_raw += ret;
-	return ret;
+		rd->offset_raw += ret;
+		out = (char *)out + ret;
+		size -= ret;
+		total += ret;
+	} while (size > 0);
+
+	return total;
 }
 
 int pkg_reader_rewind(pkg_reader_t *rd)
