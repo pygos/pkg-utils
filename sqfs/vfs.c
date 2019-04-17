@@ -244,6 +244,72 @@ static int link_node_to_tbl(vfs_t *fs, node_t *n, void *user)
 	return 0;
 }
 
+static node_t *sort_list(node_t *head)
+{
+	node_t *it, *prev, *lhs, *rhs;
+	size_t i, count = 0;
+
+	for (it = head; it != NULL; it = it->next)
+		++count;
+
+	if (count < 2)
+		return head;
+
+	prev = NULL;
+	it = head;
+
+	for (i = 0; i < count / 2; ++i) {
+		prev = it;
+		it = it->next;
+	}
+
+	prev->next = NULL;
+
+	lhs = sort_list(head);
+	rhs = sort_list(it);
+
+	head = NULL;
+	prev = NULL;
+
+	while (lhs != NULL && rhs != NULL) {
+		if (strcmp(lhs->name, rhs->name) <= 0) {
+			it = lhs;
+			lhs = lhs->next;
+		} else {
+			it = rhs;
+			rhs = rhs->next;
+		}
+
+		it->next = NULL;
+		if (prev != NULL) {
+			prev->next = it;
+			prev = it;
+		} else {
+			prev = head = it;
+		}
+	}
+
+	it = (lhs != NULL ? lhs : rhs);
+
+	if (prev != NULL) {
+		prev->next = it;
+	} else {
+		head = it;
+	}
+
+	return head;
+}
+
+static void sort_directory(node_t *n)
+{
+	n->data.dir->children = sort_list(n->data.dir->children);
+
+	for (n = n->data.dir->children; n != NULL; n = n->next) {
+		if (S_ISDIR(n->mode))
+			sort_directory(n);
+	}
+}
+
 int create_vfs_tree(sqfs_info_t *info)
 {
 	image_entry_t *ent, *list;
@@ -267,6 +333,8 @@ int create_vfs_tree(sqfs_info_t *info)
 		if (n == NULL)
 			goto fail;
 	}
+
+	sort_directory(fs->root);
 
 	if (foreach_node(fs, fs->root, &counter, alloc_inum))
 		goto fail;
