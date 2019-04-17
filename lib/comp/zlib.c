@@ -188,9 +188,9 @@ static compressor_stream_t *create_stream(bool compress)
 	return base;
 }
 
-static compressor_stream_t *zlib_compress(compressor_t *cmp)
+static compressor_stream_t *zlib_compress(compressor_t *cmp, void *options)
 {
-	(void)cmp;
+	(void)cmp; (void)options;
 	return create_stream(true);
 }
 

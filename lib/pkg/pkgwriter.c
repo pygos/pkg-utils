@@ -96,7 +96,7 @@ pkg_writer_t *pkg_writer_open(const char *path, bool force)
 		return NULL;
 	}
 
-	wr->stream = cmp->compression_stream(cmp);
+	wr->stream = cmp->compression_stream(cmp, NULL);
 	if (wr->stream == NULL) {
 		fputs("error creating compressor stream for package header\n",
 		      stderr);
@@ -153,7 +153,7 @@ int pkg_writer_start_record(pkg_writer_t *wr, uint32_t magic,
 	if (write_header(wr))
 		return -1;
 
-	wr->stream = cmp->compression_stream(cmp);
+	wr->stream = cmp->compression_stream(cmp, NULL);
 	if (wr->stream == NULL)
 		return -1;
 

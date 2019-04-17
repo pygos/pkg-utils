@@ -17,6 +17,7 @@ typedef struct {
 	int used;
 	bool eof;
 	bool error;
+	size_t dict_size;
 } lzma_stream_t;
 
 static ssize_t lzma_write(compressor_stream_t *base,
@@ -96,16 +97,19 @@ static ssize_t lzma_comp_block(compressor_stream_t *base,
 			       const uint8_t *in, uint8_t *out,
 			       size_t insize, size_t outsize)
 {
+	lzma_stream_t *lzma = (lzma_stream_t *)base;
 	lzma_filter filters[5];
 	lzma_options_lzma opt;
 	size_t written = 0;
 	lzma_ret ret;
-	(void)base;
 
 	if (lzma_lzma_preset(&opt, LZMA_PRESET_DEFAULT)) {
 		fputs("error initializing LZMA options\n", stderr);
 		return -1;
 	}
+
+	if (lzma->dict_size)
+		opt.dict_size = lzma->dict_size;
 
 	filters[0].id = LZMA_FILTER_LZMA2;
 	filters[0].options = &opt;
@@ -156,7 +160,7 @@ static void lzma_destroy(compressor_stream_t *base)
 	free(lzma);
 }
 
-static compressor_stream_t *create_stream(bool compress)
+static compressor_stream_t *create_stream(bool compress, size_t dict_size)
 {
 	lzma_stream_t *lzma = calloc(1, sizeof(*lzma));
 	compressor_stream_t *base;
@@ -169,6 +173,7 @@ static compressor_stream_t *create_stream(bool compress)
 	}
 
 	lzma->action = LZMA_RUN;
+	lzma->dict_size = dict_size;
 
 	base = (compressor_stream_t *)lzma;
 	base->write = lzma_write;
@@ -181,6 +186,9 @@ static compressor_stream_t *create_stream(bool compress)
 
 		if (lzma_lzma_preset(&opt_lzma2, LZMA_PRESET_DEFAULT))
 			goto fail;
+
+		if (dict_size)
+			opt_lzma2.dict_size = dict_size;
 
 		filters[0].id = LZMA_FILTER_LZMA2;
 		filters[0].options = &opt_lzma2;
@@ -208,16 +216,16 @@ fail:
 	return NULL;
 }
 
-static compressor_stream_t *lzma_compress(compressor_t *cmp)
+static compressor_stream_t *lzma_compress(compressor_t *cmp, void *options)
 {
 	(void)cmp;
-	return create_stream(true);
+	return create_stream(true, options == NULL ? 0 : *((size_t *)options));
 }
 
 static compressor_stream_t *lzma_uncompress(compressor_t *cmp)
 {
 	(void)cmp;
-	return create_stream(false);
+	return create_stream(false, 0);
 }
 
 compressor_t comp_lzma = {

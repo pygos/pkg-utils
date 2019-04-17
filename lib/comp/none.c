@@ -75,11 +75,12 @@ static void dummy_destroy(compressor_stream_t *base)
 	free(base);
 }
 
-static compressor_stream_t *create_dummy_stream(compressor_t *cmp)
+static compressor_stream_t *create_dummy_stream(compressor_t *cmp,
+						void *options)
 {
 	dummy_stream_t *dummy = calloc(1, sizeof(*dummy));
 	compressor_stream_t *base;
-	(void)cmp;
+	(void)cmp; (void)options;
 
 	if (dummy == NULL) {
 		perror("creating dummy compressor stream");
@@ -95,9 +96,14 @@ static compressor_stream_t *create_dummy_stream(compressor_t *cmp)
 	return base;
 }
 
+static compressor_stream_t *create_dummy_uncompressor(compressor_t *cmp)
+{
+	return create_dummy_stream(cmp, NULL);
+}
+
 compressor_t comp_none = {
 	.name = "none",
 	.id = PKG_COMPRESSION_NONE,
 	.compression_stream = create_dummy_stream,
-	.uncompression_stream = create_dummy_stream,
+	.uncompression_stream = create_dummy_uncompressor,
 };

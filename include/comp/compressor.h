@@ -28,7 +28,8 @@ typedef struct compressor_t {
 	const char *name;
 	PKG_COMPRESSION id;
 
-	compressor_stream_t *(*compression_stream)(struct compressor_t *cmp);
+	compressor_stream_t *(*compression_stream)(struct compressor_t *cmp,
+						   void *options);
 
 	compressor_stream_t *(*uncompression_stream)(struct compressor_t *cmp);
 } compressor_t;
