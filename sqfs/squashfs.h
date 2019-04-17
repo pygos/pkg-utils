@@ -123,6 +123,9 @@ typedef enum {
 	SQFS_COMP_XZ = 4,
 	SQFS_COMP_LZ4 = 5,
 	SQFS_COMP_ZSTD = 6,
+
+	SQFS_COMP_MIN = 1,
+	SQFS_COMP_MAX = 6,
 } E_SQFS_COMPRESSOR;
 
 typedef enum {

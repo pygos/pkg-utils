@@ -2,6 +2,7 @@
 #include "pkg2sqfs.h"
 
 static struct option long_opts[] = {
+	{ "compressor", required_argument, NULL, 'c' },
 	{ "block-size", required_argument, NULL, 'b' },
 	{ "dev-block-size", required_argument, NULL, 'B' },
 	{ "default-uid", required_argument, NULL, 'u' },
@@ -12,7 +13,7 @@ static struct option long_opts[] = {
 	{ "help", no_argument, NULL, 'h' },
 };
 
-static const char *short_opts = "b:B:u:g:m:fhV";
+static const char *short_opts = "c:b:B:u:g:m:fhV";
 
 extern char *__progname;
 
@@ -32,16 +33,18 @@ static const char *help_string =
 "\n"
 "Possible options:\n"
 "\n"
+"  --compressor, -c <name>     Select the compressor to use.\n"
+"                              directories (defaults to 'xz').\n"
 "  --block-size, -b <size>     Block size to use for Squashfs image.\n"
 "                              Defaults to %u.\n"
 "  --dev-block-size, -B <size> Device block size to padd the image to.\n"
 "                              Defaults to %u.\n"
 "  --default-uid, -u <valie>   Default user ID for implicitly created\n"
-"                              directories (defaults to 0)."
+"                              directories (defaults to 0).\n"
 "  --default-gid, -g <value>   Default group ID for implicitly created\n"
-"                              directories (defaults to 0)."
+"                              directories (defaults to 0).\n"
 "  --default-mode, -m <value>  Default permissions for implicitly created\n"
-"                              directories (defaults to 0755)."
+"                              directories (defaults to 0755).\n"
 "  --force, -f                 Overwrite the output file if it exists.\n"
 "  --help, -h                  Print help text and exit.\n"
 "  --version, -V               Print version information and exit.\n"
@@ -84,6 +87,15 @@ static void print_tree(int level, node_t *n)
 		break;
 	}
 }
+
+static const char *compressors[] = {
+	[SQFS_COMP_GZIP] = "gzip",
+	[SQFS_COMP_LZMA] = "lzma",
+	[SQFS_COMP_LZO] = "lzo",
+	[SQFS_COMP_XZ] = "xz",
+	[SQFS_COMP_LZ4] = "lz4",
+	[SQFS_COMP_ZSTD] = "zstd",
+};
 
 static long read_number(const char *name, const char *str, long min, long max)
 {
@@ -182,6 +194,7 @@ int main(int argc, char **argv)
 {
 	uint32_t blocksize = SQFS_DEFAULT_BLOCK_SIZE, timestamp = 0;
 	int i, outmode = O_WRONLY | O_CREAT | O_EXCL;
+	E_SQFS_COMPRESSOR compressor = SQFS_COMP_XZ;
 	const char *infile, *outfile;
 	int status = EXIT_FAILURE;
 	compressor_stream_t *cmp;
@@ -199,6 +212,14 @@ int main(int argc, char **argv)
 			break;
 
 		switch (i) {
+		case 'c':
+			for (i = SQFS_COMP_MIN; i <= SQFS_COMP_MAX; ++i) {
+				if (strcmp(compressors[i], optarg) == 0) {
+					compressor = i;
+					break;
+				}
+			}
+			break;
 		case 'b':
 			blocksize = read_number("Block size", optarg,
 						1024, 0xFFFFFFFF);
@@ -226,6 +247,12 @@ int main(int argc, char **argv)
 		case 'h':
 			printf(help_string, __progname,
 			       SQFS_DEFAULT_BLOCK_SIZE, SQFS_DEVBLK_SIZE);
+
+			fputs("Available compressors:\n", stdout);
+
+			for (i = SQFS_COMP_MIN; i <= SQFS_COMP_MAX; ++i)
+				printf("\t%s\n", compressors[i]);
+
 			exit(EXIT_SUCCESS);
 		case 'V':
 			printf(version_string, __progname,
@@ -254,7 +281,7 @@ int main(int argc, char **argv)
 		goto out_pkg_close;
 	}
 
-	if (sqfs_super_init(&info.super, timestamp, blocksize, SQFS_COMP_GZIP))
+	if (sqfs_super_init(&info.super, timestamp, blocksize, compressor))
 		goto out_close;
 
 	cmp = sqfs_get_compressor(&info.super);
