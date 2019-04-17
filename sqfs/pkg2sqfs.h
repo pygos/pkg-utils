@@ -133,9 +133,4 @@ int meta_writer_flush(meta_writer_t *m);
 
 int meta_writer_append(meta_writer_t *m, const void *data, size_t size);
 
-int sqfs_write_table(sqfs_info_t *info, const void *data, size_t entsize,
-		     size_t count, uint64_t *start);
-
-int sqfs_padd_file(sqfs_info_t *info);
-
 #endif /* PKG2SQFS_H */

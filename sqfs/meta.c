@@ -294,12 +294,3 @@ fail_tmp:
 	fclose(tmp);
 	return -1;
 }
-
-int sqfs_write_ids(sqfs_info_t *info)
-{
-	info->super.flags |= SQFS_FLAG_UNCOMPRESSED_IDS;
-
-	return sqfs_write_table(info, info->fs.id_tbl,
-				sizeof(info->fs.id_tbl[0]),
-				info->fs.num_ids, &info->super.id_table_start);
-}

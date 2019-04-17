@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: ISC */
 #include "pkg2sqfs.h"
 
-int sqfs_write_table(sqfs_info_t *info, const void *data, size_t entsize,
-		     size_t count, uint64_t *startblock)
+static int sqfs_write_table(sqfs_info_t *info, const void *data,
+			    size_t entsize, size_t count, uint64_t *startblock)
 {
 	size_t ent_per_blocks = SQFS_META_BLOCK_SIZE / entsize;
 	uint64_t blocks[count / ent_per_blocks + 1];
@@ -55,4 +55,23 @@ int sqfs_write_table(sqfs_info_t *info, const void *data, size_t entsize,
 fail:
 	meta_writer_destroy(m);
 	return -1;
+}
+
+int sqfs_write_fragment_table(sqfs_info_t *info)
+{
+	info->super.fragment_entry_count = info->num_fragments;
+
+	return sqfs_write_table(info, info->fragments,
+				sizeof(info->fragments[0]),
+				info->num_fragments,
+				&info->super.fragment_table_start);
+}
+
+int sqfs_write_ids(sqfs_info_t *info)
+{
+	info->super.flags |= SQFS_FLAG_UNCOMPRESSED_IDS;
+
+	return sqfs_write_table(info, info->fs.id_tbl,
+				sizeof(info->fs.id_tbl[0]),
+				info->fs.num_ids, &info->super.id_table_start);
 }

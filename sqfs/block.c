@@ -200,13 +200,3 @@ fail_trunc:
 		pkg_reader_get_filename(info->rd));
 	return -1;
 }
-
-int sqfs_write_fragment_table(sqfs_info_t *info)
-{
-	info->super.fragment_entry_count = info->num_fragments;
-
-	return sqfs_write_table(info, info->fragments,
-				sizeof(info->fragments[0]),
-				info->num_fragments,
-				&info->super.fragment_table_start);
-}

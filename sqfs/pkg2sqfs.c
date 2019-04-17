@@ -99,6 +99,42 @@ static long read_number(const char *name, const char *str, long min, long max)
 	return result;
 }
 
+static int sqfs_padd_file(sqfs_info_t *info)
+{
+	size_t padd_sz = info->super.bytes_used % info->dev_blk_size;
+	uint8_t *buffer;
+	ssize_t ret;
+	off_t off;
+
+	if (padd_sz == 0)
+		return 0;
+
+	off = lseek(info->outfd, 0, SEEK_END);
+	if (off == (off_t)-1) {
+		perror("seek on output file");
+		return -1;
+	}
+
+	padd_sz = info->dev_blk_size - padd_sz;
+	buffer = alloca(padd_sz);
+	memset(buffer, 0, padd_sz);
+
+	ret = write_retry(info->outfd, buffer, padd_sz);
+
+	if (ret < 0) {
+		perror("Error padding squashfs image to page size");
+		return -1;
+	}
+
+	if (ret == 0) {
+		fputs("Truncated write trying to padd squashfs image\n",
+		      stderr);
+		return -1;
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	uint32_t blocksize = SQFS_DEFAULT_BLOCK_SIZE, timestamp = 0;
