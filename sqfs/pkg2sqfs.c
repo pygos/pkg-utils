@@ -284,13 +284,13 @@ int main(int argc, char **argv)
 	free(info.block);
 	info.block = NULL;
 
-	if (sqfs_write_inodes(&info))
+	if (sqfs_write_inodes(&info, cmp))
 		goto out_fragments;
 
-	if (sqfs_write_fragment_table(&info))
+	if (sqfs_write_fragment_table(&info, cmp))
 		goto out_fragments;
 
-	if (sqfs_write_ids(&info))
+	if (sqfs_write_ids(&info, cmp))
 		goto out_fragments;
 
 	if (sqfs_super_write(&info))

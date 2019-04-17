@@ -30,9 +30,11 @@
 
 typedef struct {
 	uint8_t data[SQFS_META_BLOCK_SIZE + 2];
+	uint8_t scratch[SQFS_META_BLOCK_SIZE];
 	size_t offset;
 	size_t written;
 	int outfd;
+	compressor_stream_t *strm;
 } meta_writer_t;
 
 typedef struct file_info_t {
@@ -121,13 +123,13 @@ void destroy_vfs_tree(vfs_t *fs);
 
 node_t *vfs_node_from_file_id(vfs_t *fs, uint32_t id);
 
-int sqfs_write_inodes(sqfs_info_t *info);
+int sqfs_write_inodes(sqfs_info_t *info, compressor_stream_t *strm);
 
-int sqfs_write_ids(sqfs_info_t *info);
+int sqfs_write_ids(sqfs_info_t *info, compressor_stream_t *strm);
 
-int sqfs_write_fragment_table(sqfs_info_t *info);
+int sqfs_write_fragment_table(sqfs_info_t *info, compressor_stream_t *strm);
 
-meta_writer_t *meta_writer_create(int fd);
+meta_writer_t *meta_writer_create(int fd, compressor_stream_t *strm);
 
 void meta_writer_destroy(meta_writer_t *m);
 

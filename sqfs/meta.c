@@ -208,7 +208,7 @@ out_file_blocks:
 	return 0;
 }
 
-int sqfs_write_inodes(sqfs_info_t *info)
+int sqfs_write_inodes(sqfs_info_t *info, compressor_stream_t *strm)
 {
 	meta_writer_t *im, *dm;
 	size_t i, diff;
@@ -224,11 +224,11 @@ int sqfs_write_inodes(sqfs_info_t *info)
 
 	tmpfd = fileno(tmp);
 
-	im = meta_writer_create(info->outfd);
+	im = meta_writer_create(info->outfd, strm);
 	if (im == NULL)
 		goto fail_tmp;
 
-	dm = meta_writer_create(tmpfd);
+	dm = meta_writer_create(tmpfd, strm);
 	if (dm == NULL)
 		goto fail_im;
 
@@ -279,8 +279,6 @@ int sqfs_write_inodes(sqfs_info_t *info)
 			goto fail;
 		}
 	}
-
-	info->super.flags |= SQFS_FLAG_UNCOMPRESSED_INODES;
 
 	meta_writer_destroy(dm);
 	meta_writer_destroy(im);

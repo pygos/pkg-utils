@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: ISC */
 #include "pkg2sqfs.h"
 
-meta_writer_t *meta_writer_create(int fd)
+meta_writer_t *meta_writer_create(int fd, compressor_stream_t *strm)
 {
 	meta_writer_t *m = calloc(1, sizeof(*m));
 
@@ -10,6 +10,7 @@ meta_writer_t *meta_writer_create(int fd)
 		return NULL;
 	}
 
+	m->strm = strm;
 	m->outfd = fd;
 	return m;
 }
@@ -23,13 +24,22 @@ int meta_writer_flush(meta_writer_t *m)
 {
 	ssize_t ret, count;
 
-	/* TODO: compress buffer */
-
 	if (m->offset == 0)
 		return 0;
 
-	((uint16_t *)m->data)[0] = htole16(m->offset | 0x8000);
-	count = m->offset + 2;
+	ret = m->strm->do_block(m->strm, m->data + 2, m->scratch,
+				m->offset, sizeof(m->scratch));
+	if (ret < 0)
+		return -1;
+
+	if (ret > 0 && (size_t)ret < m->offset) {
+		memcpy(m->data + 2, m->scratch, ret);
+		((uint16_t *)m->data)[0] = htole16(ret);
+		count = ret + 2;
+	} else {
+		((uint16_t *)m->data)[0] = htole16(m->offset | 0x8000);
+		count = m->offset + 2;
+	}
 
 	ret = write_retry(m->outfd, m->data, count);
 	if (ret < 0) {
