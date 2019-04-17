@@ -16,6 +16,10 @@ typedef struct compressor_stream_t {
 
 	void (*flush)(struct compressor_stream_t *stream);
 
+	ssize_t (*do_block)(struct compressor_stream_t *stream,
+			    const uint8_t *in, uint8_t *out,
+			    size_t insize, size_t outsize);
+
 	void (*destroy)(struct compressor_stream_t *stream);
 } compressor_stream_t;
 
