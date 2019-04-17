@@ -2,6 +2,7 @@
 #include "pkg2sqfs.h"
 
 static struct option long_opts[] = {
+	{ "timestamp", required_argument, NULL, 't' },
 	{ "compressor", required_argument, NULL, 'c' },
 	{ "block-size", required_argument, NULL, 'b' },
 	{ "dev-block-size", required_argument, NULL, 'B' },
@@ -13,7 +14,7 @@ static struct option long_opts[] = {
 	{ "help", no_argument, NULL, 'h' },
 };
 
-static const char *short_opts = "c:b:B:u:g:m:fhV";
+static const char *short_opts = "t:c:b:B:u:g:m:fhV";
 
 extern char *__progname;
 
@@ -35,6 +36,8 @@ static const char *help_string =
 "\n"
 "  --compressor, -c <name>     Select the compressor to use.\n"
 "                              directories (defaults to 'xz').\n"
+"  --timestamp, -t <value>     Set timestamp for all inodes and image file.\n"
+"                              Defaults to 0 (Jan 1st, 1970).\n"
 "  --block-size, -b <size>     Block size to use for Squashfs image.\n"
 "                              Defaults to %u.\n"
 "  --dev-block-size, -B <size> Device block size to padd the image to.\n"
@@ -212,6 +215,10 @@ int main(int argc, char **argv)
 			break;
 
 		switch (i) {
+		case 't':
+			timestamp = read_number("Timestamp", optarg,
+						0, 0xFFFFFFFF);
+			break;
 		case 'c':
 			for (i = SQFS_COMP_MIN; i <= SQFS_COMP_MAX; ++i) {
 				if (strcmp(compressors[i], optarg) == 0) {
