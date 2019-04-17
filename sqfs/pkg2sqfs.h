@@ -102,6 +102,8 @@ typedef struct {
 	int file_block_count;
 	file_info_t *frag_list;
 	size_t frag_offset;
+
+	size_t dev_blk_size;
 } sqfs_info_t;
 
 int pkg_data_to_sqfs(sqfs_info_t *info);
@@ -133,5 +135,7 @@ int meta_writer_append(meta_writer_t *m, const void *data, size_t size);
 
 int sqfs_write_table(sqfs_info_t *info, const void *data, size_t entsize,
 		     size_t count, uint64_t *start);
+
+int sqfs_padd_file(sqfs_info_t *info);
 
 #endif /* PKG2SQFS_H */

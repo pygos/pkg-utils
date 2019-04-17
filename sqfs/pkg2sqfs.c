@@ -3,12 +3,13 @@
 
 static struct option long_opts[] = {
 	{ "block-size", required_argument, NULL, 'b' },
+	{ "dev-block-size", required_argument, NULL, 'B' },
 	{ "force", no_argument, NULL, 'f' },
 	{ "version", no_argument, NULL, 'V' },
 	{ "help", no_argument, NULL, 'h' },
 };
 
-static const char *short_opts = "b:fhV";
+static const char *short_opts = "b:B:fhV";
 
 extern char *__progname;
 
@@ -28,11 +29,13 @@ static const char *help_string =
 "\n"
 "Possible options:\n"
 "\n"
-"  --block-size, -b <size>  Block size to use for Squashfs image.\n"
-"                           Defaults to %u.\n"
-"  --force, -f              Overwrite the output file if it already exists.\n"
-"  --help, -h               Print help text and exit.\n"
-"  --version, -V            Print version information and exit.\n"
+"  --block-size, -b <size>     Block size to use for Squashfs image.\n"
+"                              Defaults to %u.\n"
+"  --dev-block-size, -B <size> Device block size to padd the image to.\n"
+"                              Defaults to %u.\n"
+"  --force, -f                 Overwrite the output file if it exists.\n"
+"  --help, -h                  Print help text and exit.\n"
+"  --version, -V               Print version information and exit.\n"
 "\n";
 
 static void print_tree(int level, node_t *n)
@@ -82,6 +85,7 @@ int main(int argc, char **argv)
 	sqfs_info_t info;
 
 	memset(&info, 0, sizeof(info));
+	info.dev_blk_size = SQFS_DEVBLK_SIZE;
 
 	for (;;) {
 		i = getopt_long(argc, argv, short_opts, long_opts, NULL);
@@ -97,12 +101,21 @@ int main(int argc, char **argv)
 				return EXIT_FAILURE;
 			}
 			break;
+		case 'B':
+			info.dev_blk_size = strtonum(optarg, 4096, 0xFFFFFFFF,
+						     &errstr);
+			if (errstr != NULL) {
+				fprintf(stderr, "Block size '%s': %s\n",
+					optarg, errstr);
+				return EXIT_FAILURE;
+			}
+			break;
 		case 'f':
 			outmode = O_WRONLY | O_CREAT | O_TRUNC;
 			break;
 		case 'h':
 			printf(help_string, __progname,
-			       SQFS_DEFAULT_BLOCK_SIZE);
+			       SQFS_DEFAULT_BLOCK_SIZE, SQFS_DEVBLK_SIZE);
 			exit(EXIT_SUCCESS);
 		case 'V':
 			printf(version_string, __progname,
@@ -171,6 +184,9 @@ int main(int argc, char **argv)
 		goto out_fragments;
 
 	if (sqfs_super_write(&info))
+		goto out_fragments;
+
+	if (sqfs_padd_file(&info))
 		goto out_fragments;
 
 	status = EXIT_SUCCESS;

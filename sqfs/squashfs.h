@@ -9,6 +9,7 @@
 #define SQFS_VERSION_MINOR 0
 #define SQFS_META_BLOCK_SIZE 8192
 #define SQFS_DEFAULT_BLOCK_SIZE 131072
+#define SQFS_DEVBLK_SIZE 4096
 
 typedef struct {
 	uint32_t magic;
