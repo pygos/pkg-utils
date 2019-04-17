@@ -102,13 +102,18 @@ compressor_stream_t *sqfs_get_compressor(sqfs_super_t *s)
 {
 	PKG_COMPRESSION id;
 	compressor_t *cmp;
+	size_t xz_dictsz;
+	void *options;
 
 	switch (s->compression_id) {
 	case SQFS_COMP_GZIP:
 		id = PKG_COMPRESSION_ZLIB;
+		options = NULL;
 		break;
 	case SQFS_COMP_XZ:
 		id = PKG_COMPRESSION_LZMA;
+		xz_dictsz = s->block_size;
+		options = &xz_dictsz;
 		break;
 	default:
 		fputs("unsupported compressor\n", stderr);
@@ -119,5 +124,5 @@ compressor_stream_t *sqfs_get_compressor(sqfs_super_t *s)
 	if (cmp == NULL)
 		return NULL;
 
-	return cmp->compression_stream(cmp);
+	return cmp->compression_stream(cmp, options);
 }
