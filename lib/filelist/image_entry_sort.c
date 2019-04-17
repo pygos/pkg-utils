@@ -6,6 +6,8 @@
 
 static int compare_ent(image_entry_t *a, image_entry_t *b)
 {
+	int diff;
+
 	/* directories < .. < symlinks < devices < .. < files */
 	switch (a->mode & S_IFMT) {
 	case S_IFDIR:
@@ -31,7 +33,8 @@ static int compare_ent(image_entry_t *a, image_entry_t *b)
 		return -1;
 	}
 out_len:
-	return (int)strlen(a->name) - (int)strlen(b->name);
+	diff = (int)strlen(a->name) - (int)strlen(b->name);
+	return diff ? diff : strcmp(a->name, b->name);
 out_fsize:
 	if (a->data.file.size > b->data.file.size)
 		return 1;
