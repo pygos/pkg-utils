@@ -21,6 +21,7 @@
 #include "util/util.h"
 
 #include "filelist/image_entry.h"
+#include "comp/compressor.h"
 #include "pkg/pkgreader.h"
 #include "pkg/pkgio.h"
 #include "squashfs.h"
@@ -107,7 +108,7 @@ typedef struct {
 	size_t dev_blk_size;
 } sqfs_info_t;
 
-int pkg_data_to_sqfs(sqfs_info_t *info);
+int pkg_data_to_sqfs(sqfs_info_t *info, compressor_stream_t *strm);
 
 int sqfs_super_init(sqfs_super_t *s, int64_t timestamp,
 		    uint32_t blocksize, E_SQFS_COMPRESSOR comp);
@@ -133,5 +134,7 @@ void meta_writer_destroy(meta_writer_t *m);
 int meta_writer_flush(meta_writer_t *m);
 
 int meta_writer_append(meta_writer_t *m, const void *data, size_t size);
+
+compressor_stream_t *sqfs_get_compressor(sqfs_super_t *s);
 
 #endif /* PKG2SQFS_H */

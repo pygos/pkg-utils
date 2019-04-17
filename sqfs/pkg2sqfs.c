@@ -184,6 +184,7 @@ int main(int argc, char **argv)
 	int i, outmode = O_WRONLY | O_CREAT | O_EXCL;
 	const char *infile, *outfile;
 	int status = EXIT_FAILURE;
+	compressor_stream_t *cmp;
 	sqfs_info_t info;
 
 	memset(&info, 0, sizeof(info));
@@ -256,10 +257,14 @@ int main(int argc, char **argv)
 	if (sqfs_super_init(&info.super, timestamp, blocksize, SQFS_COMP_GZIP))
 		goto out_close;
 
+	cmp = sqfs_get_compressor(&info.super);
+	if (cmp == NULL)
+		goto out_close;
+
 	info.block = malloc(info.super.block_size * 3);
 	if (info.block == NULL) {
 		perror("malloc");
-		goto out_close;
+		goto out_cmp;
 	}
 
 	info.scratch = (char *)info.block + info.super.block_size;
@@ -273,7 +278,7 @@ int main(int argc, char **argv)
 	if (sqfs_super_write(&info))
 		goto out_tree;
 
-	if (pkg_data_to_sqfs(&info))
+	if (pkg_data_to_sqfs(&info, cmp))
 		goto out_fragments;
 
 	free(info.block);
@@ -301,6 +306,8 @@ out_tree:
 	destroy_vfs_tree(&info.fs);
 out_buffer:
 	free(info.block);
+out_cmp:
+	cmp->destroy(cmp);
 out_close:
 	close(info.outfd);
 out_pkg_close:

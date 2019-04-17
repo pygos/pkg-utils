@@ -97,3 +97,27 @@ int sqfs_super_write(sqfs_info_t *info)
 
 	return 0;
 }
+
+compressor_stream_t *sqfs_get_compressor(sqfs_super_t *s)
+{
+	PKG_COMPRESSION id;
+	compressor_t *cmp;
+
+	switch (s->compression_id) {
+	case SQFS_COMP_GZIP:
+		id = PKG_COMPRESSION_ZLIB;
+		break;
+	case SQFS_COMP_XZ:
+		id = PKG_COMPRESSION_LZMA;
+		break;
+	default:
+		fputs("unsupported compressor\n", stderr);
+		return NULL;
+	}
+
+	cmp = compressor_by_id(id);
+	if (cmp == NULL)
+		return NULL;
+
+	return cmp->compression_stream(cmp);
+}

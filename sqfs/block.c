@@ -1,17 +1,30 @@
 /* SPDX-License-Identifier: ISC */
 #include "pkg2sqfs.h"
 
-static int write_block(node_t *node, sqfs_info_t *info)
+static int write_block(node_t *node, sqfs_info_t *info,
+		       compressor_stream_t *strm)
 {
 	size_t idx, bs;
 	ssize_t ret;
-
-	/* TODO: try to compress the block */
+	void *ptr;
 
 	idx = info->file_block_count++;
 	bs = info->super.block_size;
 
-	ret = write_retry(info->outfd, info->block, bs);
+	ret = strm->do_block(strm, info->block, info->scratch, bs, bs);
+	if (ret < 0)
+		return -1;
+
+	if (ret > 0) {
+		ptr = info->scratch;
+		bs = ret;
+		node->data.file->blocksizes[idx] = bs;
+	} else {
+		ptr = info->block;
+		node->data.file->blocksizes[idx] = bs | (1 << 24);
+	}
+
+	ret = write_retry(info->outfd, ptr, bs);
 	if (ret < 0) {
 		perror("writing to output file");
 		return -1;
@@ -22,20 +35,17 @@ static int write_block(node_t *node, sqfs_info_t *info)
 		return -1;
 	}
 
-	node->data.file->blocksizes[idx] = bs | (1 << 24);
-
-	info->super.flags |= SQFS_FLAG_UNCOMPRESSED_DATA;
 	info->super.bytes_used += bs;
 	return 0;
 }
 
-static int flush_fragments(sqfs_info_t *info)
+static int flush_fragments(sqfs_info_t *info, compressor_stream_t *strm)
 {
 	size_t newsz, size;
 	file_info_t *fi;
 	uint64_t offset;
+	void *new, *ptr;
 	ssize_t ret;
-	void *new;
 
 	if (info->num_fragments == info->max_fragments) {
 		newsz = info->max_fragments ? info->max_fragments * 2 : 16;
@@ -57,15 +67,27 @@ static int flush_fragments(sqfs_info_t *info)
 	for (fi = info->frag_list; fi != NULL; fi = fi->frag_next)
 		fi->fragment = info->num_fragments;
 
+	ret = strm->do_block(strm, info->fragment, info->scratch,
+			     size, info->super.block_size);
+	if (ret < 0)
+		return -1;
+
 	info->fragments[info->num_fragments].start_offset = htole64(offset);
-	info->fragments[info->num_fragments].size = htole32(size | (1 << 24));
 	info->fragments[info->num_fragments].pad0 = 0;
+
+	if (ret > 0 && (size_t)ret < size) {
+		size = ret;
+		info->fragments[info->num_fragments].size = htole32(size);
+		ptr = info->scratch;
+	} else {
+		info->fragments[info->num_fragments].size =
+			htole32(size | (1 << 24));
+		ptr = info->fragment;
+	}
 
 	info->num_fragments += 1;
 
-	/* TODO: try to compress the fragments */
-
-	ret = write_retry(info->outfd, info->fragment, size);
+	ret = write_retry(info->outfd, ptr, size);
 	if (ret < 0) {
 		perror("writing to output file");
 		return -1;
@@ -83,15 +105,15 @@ static int flush_fragments(sqfs_info_t *info)
 	info->frag_list = NULL;
 
 	info->super.flags &= ~SQFS_FLAG_NO_FRAGMENTS;
-	info->super.flags |= SQFS_FLAG_UNCOMPRESSED_FRAGMENTS;
 	info->super.flags |= SQFS_FLAG_ALWAYS_FRAGMENTS;
 	return 0;
 }
 
-static int add_fragment(file_info_t *fi, sqfs_info_t *info, size_t size)
+static int add_fragment(file_info_t *fi, sqfs_info_t *info, size_t size,
+			compressor_stream_t *strm)
 {
 	if (info->frag_offset + size > info->super.block_size) {
-		if (flush_fragments(info))
+		if (flush_fragments(info, strm))
 			return -1;
 	}
 
@@ -104,7 +126,8 @@ static int add_fragment(file_info_t *fi, sqfs_info_t *info, size_t size)
 	return 0;
 }
 
-static int process_file(node_t *node, sqfs_info_t *info)
+static int process_file(node_t *node, sqfs_info_t *info,
+			compressor_stream_t *strm)
 {
 	uint64_t count = node->data.file->size;
 	int ret;
@@ -124,10 +147,10 @@ static int process_file(node_t *node, sqfs_info_t *info)
 			goto fail_trunc;
 
 		if (diff < info->super.block_size) {
-			if (add_fragment(node->data.file, info, diff))
+			if (add_fragment(node->data.file, info, diff, strm))
 				return -1;
 		} else {
-			if (write_block(node, info))
+			if (write_block(node, info, strm))
 				return -1;
 		}
 
@@ -141,7 +164,7 @@ fail_trunc:
 	return -1;
 }
 
-int pkg_data_to_sqfs(sqfs_info_t *info)
+int pkg_data_to_sqfs(sqfs_info_t *info, compressor_stream_t *strm)
 {
 	file_data_t frec;
 	record_t *hdr;
@@ -180,13 +203,13 @@ int pkg_data_to_sqfs(sqfs_info_t *info)
 			if (node == NULL)
 				goto fail_meta;
 
-			if (process_file(node, info))
+			if (process_file(node, info, strm))
 				return -1;
 		}
 	}
 
 	if (info->frag_offset != 0) {
-		if (flush_fragments(info))
+		if (flush_fragments(info, strm))
 			return -1;
 	}
 
