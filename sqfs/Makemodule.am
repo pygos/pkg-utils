@@ -13,10 +13,4 @@ if WITH_ZLIB
 pkg2sqfs_LDADD += $(ZLIB_LIBS)
 endif
 
-if HAVE_LIBBSD
-pkg2sqfs_CPPFLAGS += -DHAVE_LIBBSD
-pkg2sqfs_CFLAGS += $(LIBBSD_CFLAGS)
-pkg2sqfs_LDADD += $(LIBBSD_LIBS)
-endif
-
 bin_PROGRAMS += pkg2sqfs

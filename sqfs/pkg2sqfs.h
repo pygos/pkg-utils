@@ -3,19 +3,20 @@
 #define PKG2SQFS_H
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <getopt.h>
 #include <stdint.h>
 #include <assert.h>
+#include <limits.h>
+#include <string.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
-
-#ifdef HAVE_LIBBSD
-#include <bsd/bsd.h>
-#endif
+#include <ctype.h>
 
 #include "util/util.h"
 
