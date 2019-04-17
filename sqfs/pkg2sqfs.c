@@ -4,12 +4,15 @@
 static struct option long_opts[] = {
 	{ "block-size", required_argument, NULL, 'b' },
 	{ "dev-block-size", required_argument, NULL, 'B' },
+	{ "default-uid", required_argument, NULL, 'u' },
+	{ "default-gid", required_argument, NULL, 'g' },
+	{ "default-mode", required_argument, NULL, 'm' },
 	{ "force", no_argument, NULL, 'f' },
 	{ "version", no_argument, NULL, 'V' },
 	{ "help", no_argument, NULL, 'h' },
 };
 
-static const char *short_opts = "b:B:fhV";
+static const char *short_opts = "b:B:u:g:m:fhV";
 
 extern char *__progname;
 
@@ -33,6 +36,12 @@ static const char *help_string =
 "                              Defaults to %u.\n"
 "  --dev-block-size, -B <size> Device block size to padd the image to.\n"
 "                              Defaults to %u.\n"
+"  --default-uid, -u <valie>   Default user ID for implicitly created\n"
+"                              directories (defaults to 0)."
+"  --default-gid, -g <value>   Default group ID for implicitly created\n"
+"                              directories (defaults to 0)."
+"  --default-mode, -m <value>  Default permissions for implicitly created\n"
+"                              directories (defaults to 0755)."
 "  --force, -f                 Overwrite the output file if it exists.\n"
 "  --help, -h                  Print help text and exit.\n"
 "  --version, -V               Print version information and exit.\n"
@@ -76,16 +85,33 @@ static void print_tree(int level, node_t *n)
 	}
 }
 
+static long read_number(const char *name, const char *str, long min, long max)
+{
+	const char *errstr;
+	long result;
+
+	result = strtonum(str, min, max, &errstr);
+	if (errstr != NULL) {
+		fprintf(stderr, "%s '%s': %s\n", name, str, errstr);
+		exit(EXIT_FAILURE);
+	}
+
+	return result;
+}
+
 int main(int argc, char **argv)
 {
 	uint32_t blocksize = SQFS_DEFAULT_BLOCK_SIZE, timestamp = 0;
 	int i, outmode = O_WRONLY | O_CREAT | O_EXCL;
-	const char *infile, *outfile, *errstr;
+	const char *infile, *outfile;
 	int status = EXIT_FAILURE;
 	sqfs_info_t info;
 
 	memset(&info, 0, sizeof(info));
 	info.dev_blk_size = SQFS_DEVBLK_SIZE;
+	info.fs.default_uid = 0;
+	info.fs.default_gid = 0;
+	info.fs.default_mode = 0755;
 
 	for (;;) {
 		i = getopt_long(argc, argv, short_opts, long_opts, NULL);
@@ -94,21 +120,25 @@ int main(int argc, char **argv)
 
 		switch (i) {
 		case 'b':
-			blocksize = strtonum(optarg, 1024, 0xFFFFFFFF, &errstr);
-			if (errstr != NULL) {
-				fprintf(stderr, "Block size '%s': %s\n",
-					optarg, errstr);
-				return EXIT_FAILURE;
-			}
+			blocksize = read_number("Block size", optarg,
+						1024, 0xFFFFFFFF);
 			break;
 		case 'B':
-			info.dev_blk_size = strtonum(optarg, 4096, 0xFFFFFFFF,
-						     &errstr);
-			if (errstr != NULL) {
-				fprintf(stderr, "Block size '%s': %s\n",
-					optarg, errstr);
-				return EXIT_FAILURE;
-			}
+			info.dev_blk_size = read_number("Device block size",
+							optarg, 4096,
+							0xFFFFFFFF);
+			break;
+		case 'u':
+			info.fs.default_uid = read_number("User ID", optarg,
+							  0, 0xFFFFFFFF);
+			break;
+		case 'g':
+			info.fs.default_gid = read_number("Group ID", optarg,
+							  0, 0xFFFFFFFF);
+			break;
+		case 'm':
+			info.fs.default_mode = read_number("Permissions",
+							   optarg, 0, 0777);
 			break;
 		case 'f':
 			outmode = O_WRONLY | O_CREAT | O_TRUNC;
@@ -155,10 +185,6 @@ int main(int argc, char **argv)
 
 	info.scratch = (char *)info.block + info.super.block_size;
 	info.fragment = (char *)info.block + 2 * info.super.block_size;
-
-	info.fs.default_uid = 0;
-	info.fs.default_gid = 0;
-	info.fs.default_mode = 0755;
 
 	if (create_vfs_tree(&info))
 		goto out_buffer;
