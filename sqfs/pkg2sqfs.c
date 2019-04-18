@@ -53,44 +53,6 @@ static const char *help_string =
 "  --version, -V               Print version information and exit.\n"
 "\n";
 
-static void print_tree(int level, node_t *n)
-{
-	int i;
-
-	for (i = 0; i < (level - 1); ++i)
-		fputs("|  ", stdout);
-
-	switch (n->mode & S_IFMT) {
-	case S_IFDIR:
-		printf("%s%s/ (%u, %o)\n", level ? "+- " : "", n->name,
-		       n->inode_num, (unsigned int)n->mode);
-
-		n = n->data.dir->children;
-		++level;
-
-		while (n != NULL) {
-			print_tree(level, n);
-			n = n->next;
-		}
-		break;
-	case S_IFLNK:
-		printf("+- %s (%u) -> %s\n", n->name, n->inode_num,
-		       n->data.symlink);
-		break;
-	case S_IFBLK:
-		printf("+- %s (%u) b %lu\n", n->name, n->inode_num,
-		       n->data.device);
-		break;
-	case S_IFCHR:
-		printf("+- %s (%u) c %lu\n", n->name, n->inode_num,
-		       n->data.device);
-		break;
-	default:
-		printf("+- %s (%u)\n", n->name, n->inode_num);
-		break;
-	}
-}
-
 static const char *compressors[] = {
 	[SQFS_COMP_GZIP] = "gzip",
 	[SQFS_COMP_LZMA] = "lzma",
@@ -306,8 +268,6 @@ int main(int argc, char **argv)
 
 	if (create_vfs_tree(&info))
 		goto out_buffer;
-
-	print_tree(0, info.fs.root);
 
 	if (sqfs_super_write(&info))
 		goto out_tree;
