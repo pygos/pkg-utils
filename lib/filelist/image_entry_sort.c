@@ -68,6 +68,34 @@ static image_entry_t *insert_sorted(image_entry_t *list, image_entry_t *ent)
 	return list;
 }
 
+static void remove_duplicates(image_entry_t *list)
+{
+	image_entry_t *it = list, *old;
+	int equal;
+
+	if (it == NULL)
+		return;
+
+	while (it->next != NULL) {
+		equal = 0;
+
+		if (S_ISDIR(it->mode) && S_ISDIR(it->next->mode)) {
+			equal = (strcmp(it->name, it->next->name) == 0);
+			equal = equal && (it->mode == it->next->mode);
+			equal = equal && (it->uid == it->next->uid);
+			equal = equal && (it->gid == it->next->gid);
+		}
+
+		if (equal) {
+			old = it->next;
+			it->next = old->next;
+			image_entry_free(old);
+		} else {
+			it = it->next;
+		}
+	}
+}
+
 image_entry_t *image_entry_sort(image_entry_t *list)
 {
 	image_entry_t *sorted = NULL, *ent;
@@ -78,6 +106,8 @@ image_entry_t *image_entry_sort(image_entry_t *list)
 
 		sorted = insert_sorted(sorted, ent);
 	}
+
+	remove_duplicates(sorted);
 
 	return sorted;
 }
