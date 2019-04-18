@@ -44,6 +44,7 @@ static int write_dir(meta_writer_t *dm, node_t *node)
 		hdr.count = htole32(count - 1);
 		hdr.start_block = htole32(c->inode_ref >> 16);
 		hdr.inode_number = htole32(c->inode_num);
+		node->data.dir->size += sizeof(hdr);
 
 		if (meta_writer_append(dm, &hdr, sizeof(hdr)))
 			return -1;
@@ -55,6 +56,7 @@ static int write_dir(meta_writer_t *dm, node_t *node)
 			ent.inode_number = htole16(c->inode_num - d->inode_num);
 			ent.type = htole16(c->type);
 			ent.size = htole16(strlen(c->name) - 1);
+			node->data.dir->size += sizeof(ent) + strlen(c->name);
 
 			if (meta_writer_append(dm, &ent, sizeof(ent)))
 				return -1;
@@ -63,8 +65,6 @@ static int write_dir(meta_writer_t *dm, node_t *node)
 
 			c = c->next;
 		}
-
-		node->data.dir->size += sizeof(hdr) + count * sizeof(ent);
 	}
 	return 0;
 }
