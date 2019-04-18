@@ -247,9 +247,6 @@ ssize_t pkg_reader_read_payload(pkg_reader_t *rd, void *out, size_t size)
 		if (prefetch_compressed(rd))
 			return -1;
 
-		if (size >= (rd->current.raw_size - rd->offset_raw))
-			rd->stream->flush(rd->stream);
-
 		ret = rd->stream->read(rd->stream, out, size);
 		if (ret < 0)
 			return -1;
