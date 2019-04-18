@@ -41,6 +41,9 @@ static int write_dir(meta_writer_t *dm, node_t *node)
 			count += 1;
 		}
 
+		if (count > SQFS_MAX_DIR_ENT)
+			count = SQFS_MAX_DIR_ENT;
+
 		hdr.count = htole32(count - 1);
 		hdr.start_block = htole32(c->inode_ref >> 16);
 		hdr.inode_number = htole32(c->inode_num);

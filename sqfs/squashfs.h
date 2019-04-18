@@ -10,6 +10,7 @@
 #define SQFS_META_BLOCK_SIZE 8192
 #define SQFS_DEFAULT_BLOCK_SIZE 131072
 #define SQFS_DEVBLK_SIZE 4096
+#define SQFS_MAX_DIR_ENT 256
 
 typedef struct {
 	uint32_t magic;
