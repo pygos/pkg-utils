@@ -18,6 +18,11 @@ Building this package produces a program called `pkg` that can:
   order to build.
 * produce pretty dependency graphs.
 
+
+An additional binary is produced called `pkg2sqfs` that can convert a package
+produced by `pkg` into a SquashFS filesystem image.
+
+
 ## License
 
 The source code in this package is provided under the OpenBSD flavored ISC
