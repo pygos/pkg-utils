@@ -316,7 +316,6 @@ int create_vfs_tree(sqfs_info_t *info)
 	uint32_t counter = 2;
 	vfs_t *fs = &info->fs;
 	node_t *n;
-	size_t i;
 
 	if (image_entry_list_from_package(info->rd, &list))
 		return -1;
@@ -351,10 +350,6 @@ int create_vfs_tree(sqfs_info_t *info)
 	info->super.id_count = fs->num_ids;
 
 	image_entry_free_list(list);
-
-	for (i = 0; i < fs->num_ids; ++i)
-		fs->id_tbl[i] = htole32(fs->id_tbl[i]);
-
 	return 0;
 fail_oom:
 	fputs("out of memory\n", stderr);

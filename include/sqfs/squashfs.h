@@ -2,6 +2,9 @@
 #ifndef SQUASHFS_H
 #define SQUASHFS_H
 
+#include "comp/compressor.h"
+#include "pkg/pkgformat.h"
+
 #include <stdint.h>
 
 #define SQFS_MAGIC 0x73717368
@@ -159,5 +162,37 @@ typedef enum {
 	SQFS_INODE_EXT_FIFO = 13,
 	SQFS_INODE_EXT_SOCKET = 14,
 } E_SQFS_INODE_TYPE;
+
+typedef struct {
+	uint8_t data[SQFS_META_BLOCK_SIZE + 2];
+	uint8_t scratch[SQFS_META_BLOCK_SIZE];
+	size_t offset;
+	size_t written;
+	int outfd;
+	compressor_stream_t *strm;
+} meta_writer_t;
+
+int sqfs_super_init(sqfs_super_t *s, int64_t timestamp,
+		    uint32_t blocksize, E_SQFS_COMPRESSOR comp);
+
+int sqfs_super_write(const sqfs_super_t *super, int outfd);
+
+compressor_stream_t *sqfs_get_compressor(sqfs_super_t *s);
+
+meta_writer_t *meta_writer_create(int fd, compressor_stream_t *strm);
+
+void meta_writer_destroy(meta_writer_t *m);
+
+int meta_writer_flush(meta_writer_t *m);
+
+int meta_writer_append(meta_writer_t *m, const void *data, size_t size);
+
+int sqfs_write_ids(int outfd, sqfs_super_t *super,
+		   uint32_t *id_tbl, size_t count,
+		   compressor_stream_t *strm);
+
+int sqfs_write_fragment_table(int outfd, sqfs_super_t *super,
+			      sqfs_fragment_t *fragments, size_t count,
+			      compressor_stream_t *strm);
 
 #endif /* SQUASHFS_H */

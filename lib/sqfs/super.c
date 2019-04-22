@@ -1,10 +1,11 @@
 /* SPDX-License-Identifier: ISC */
 #include <endian.h>
 #include <string.h>
+#include <unistd.h>
 #include <stdio.h>
 
+#include "sqfs/squashfs.h"
 #include "util/util.h"
-#include "pkg2sqfs.h"
 
 int sqfs_super_init(sqfs_super_t *s, int64_t timestamp,
 		    uint32_t blocksize, E_SQFS_COMPRESSOR comp)
@@ -50,47 +51,47 @@ int sqfs_super_init(sqfs_super_t *s, int64_t timestamp,
 	return 0;
 }
 
-int sqfs_super_write(sqfs_info_t *info)
+int sqfs_super_write(const sqfs_super_t *super, int outfd)
 {
 	sqfs_super_t copy;
 	ssize_t ret;
 	off_t off;
 
-	copy.magic = htole32(info->super.magic);
-	copy.inode_count = htole32(info->super.inode_count);
-	copy.modification_time = htole32(info->super.modification_time);
-	copy.block_size = htole32(info->super.block_size);
-	copy.fragment_entry_count = htole32(info->super.fragment_entry_count);
-	copy.compression_id = htole16(info->super.compression_id);
-	copy.block_log = htole16(info->super.block_log);
-	copy.flags = htole16(info->super.flags);
-	copy.id_count = htole16(info->super.id_count);
-	copy.version_major = htole16(info->super.version_major);
-	copy.version_minor = htole16(info->super.version_minor);
-	copy.root_inode_ref = htole64(info->super.root_inode_ref);
-	copy.bytes_used = htole64(info->super.bytes_used);
-	copy.id_table_start = htole64(info->super.id_table_start);
-	copy.xattr_id_table_start = htole64(info->super.xattr_id_table_start);
-	copy.inode_table_start = htole64(info->super.inode_table_start);
-	copy.directory_table_start = htole64(info->super.directory_table_start);
-	copy.fragment_table_start = htole64(info->super.fragment_table_start);
-	copy.export_table_start = htole64(info->super.export_table_start);
+	copy.magic = htole32(super->magic);
+	copy.inode_count = htole32(super->inode_count);
+	copy.modification_time = htole32(super->modification_time);
+	copy.block_size = htole32(super->block_size);
+	copy.fragment_entry_count = htole32(super->fragment_entry_count);
+	copy.compression_id = htole16(super->compression_id);
+	copy.block_log = htole16(super->block_log);
+	copy.flags = htole16(super->flags);
+	copy.id_count = htole16(super->id_count);
+	copy.version_major = htole16(super->version_major);
+	copy.version_minor = htole16(super->version_minor);
+	copy.root_inode_ref = htole64(super->root_inode_ref);
+	copy.bytes_used = htole64(super->bytes_used);
+	copy.id_table_start = htole64(super->id_table_start);
+	copy.xattr_id_table_start = htole64(super->xattr_id_table_start);
+	copy.inode_table_start = htole64(super->inode_table_start);
+	copy.directory_table_start = htole64(super->directory_table_start);
+	copy.fragment_table_start = htole64(super->fragment_table_start);
+	copy.export_table_start = htole64(super->export_table_start);
 
-	off = lseek(info->outfd, 0, SEEK_SET);
+	off = lseek(outfd, 0, SEEK_SET);
 	if (off == (off_t)-1) {
-		perror("seek on output file");
+		perror("squashfs writing super block: seek on output file");
 		return -1;
 	}
 
-	ret = write_retry(info->outfd, &copy, sizeof(copy));
+	ret = write_retry(outfd, &copy, sizeof(copy));
 
 	if (ret < 0) {
-		perror("Error writing squashfs super block");
+		perror("squashfs writing super block");
 		return -1;
 	}
 
 	if (ret == 0) {
-		fputs("Truncated write trying to write squashfs super block\n",
+		fputs("squashfs writing super block: truncated write\n",
 		      stderr);
 		return -1;
 	}

@@ -23,19 +23,10 @@
 #include "filelist/image_entry.h"
 #include "comp/compressor.h"
 #include "pkg/pkgreader.h"
+#include "sqfs/squashfs.h"
 #include "pkg/pkgio.h"
-#include "squashfs.h"
 
 #include "config.h"
-
-typedef struct {
-	uint8_t data[SQFS_META_BLOCK_SIZE + 2];
-	uint8_t scratch[SQFS_META_BLOCK_SIZE];
-	size_t offset;
-	size_t written;
-	int outfd;
-	compressor_stream_t *strm;
-} meta_writer_t;
 
 typedef struct file_info_t {
 	struct file_info_t *frag_next;
@@ -112,11 +103,6 @@ typedef struct {
 
 int pkg_data_to_sqfs(sqfs_info_t *info, compressor_stream_t *strm);
 
-int sqfs_super_init(sqfs_super_t *s, int64_t timestamp,
-		    uint32_t blocksize, E_SQFS_COMPRESSOR comp);
-
-int sqfs_super_write(sqfs_info_t *info);
-
 int create_vfs_tree(sqfs_info_t *info);
 
 void destroy_vfs_tree(vfs_t *fs);
@@ -124,19 +110,5 @@ void destroy_vfs_tree(vfs_t *fs);
 node_t *vfs_node_from_file_id(vfs_t *fs, uint32_t id);
 
 int sqfs_write_inodes(sqfs_info_t *info, compressor_stream_t *strm);
-
-int sqfs_write_ids(sqfs_info_t *info, compressor_stream_t *strm);
-
-int sqfs_write_fragment_table(sqfs_info_t *info, compressor_stream_t *strm);
-
-meta_writer_t *meta_writer_create(int fd, compressor_stream_t *strm);
-
-void meta_writer_destroy(meta_writer_t *m);
-
-int meta_writer_flush(meta_writer_t *m);
-
-int meta_writer_append(meta_writer_t *m, const void *data, size_t size);
-
-compressor_stream_t *sqfs_get_compressor(sqfs_super_t *s);
 
 #endif /* PKG2SQFS_H */

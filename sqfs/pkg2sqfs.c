@@ -269,7 +269,7 @@ int main(int argc, char **argv)
 	if (create_vfs_tree(&info))
 		goto out_buffer;
 
-	if (sqfs_super_write(&info))
+	if (sqfs_super_write(&info.super, info.outfd))
 		goto out_tree;
 
 	if (pkg_data_to_sqfs(&info, cmp))
@@ -281,13 +281,16 @@ int main(int argc, char **argv)
 	if (sqfs_write_inodes(&info, cmp))
 		goto out_fragments;
 
-	if (sqfs_write_fragment_table(&info, cmp))
+	if (sqfs_write_fragment_table(info.outfd, &info.super,
+				      info.fragments, info.num_fragments,
+				      cmp))
 		goto out_fragments;
 
-	if (sqfs_write_ids(&info, cmp))
+	if (sqfs_write_ids(info.outfd, &info.super,
+			   info.fs.id_tbl, info.fs.num_ids, cmp))
 		goto out_fragments;
 
-	if (sqfs_super_write(&info))
+	if (sqfs_super_write(&info.super, info.outfd))
 		goto out_fragments;
 
 	if (sqfs_padd_file(&info))

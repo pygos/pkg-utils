@@ -1,5 +1,10 @@
 /* SPDX-License-Identifier: ISC */
-#include "pkg2sqfs.h"
+#include "sqfs/squashfs.h"
+#include "util/util.h"
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 meta_writer_t *meta_writer_create(int fd, compressor_stream_t *strm)
 {
