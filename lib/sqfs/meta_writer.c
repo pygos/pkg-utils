@@ -85,5 +85,8 @@ int meta_writer_append(meta_writer_t *m, const void *data, size_t size)
 		data = (const char *)data + diff;
 	}
 
+	if (m->offset == (sizeof(m->data) - 2))
+		return meta_writer_flush(m);
+
 	return 0;
 }
