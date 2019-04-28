@@ -36,10 +36,9 @@ typedef struct {
 } record_t;
 
 typedef struct {
-	uint32_t mode;
-	uint32_t uid;
-	uint32_t gid;
-
+	uint16_t mode;
+	uint16_t uid;
+	uint16_t gid;
 	uint16_t path_length;
 	/* uint8_t path[]; */
 } toc_entry_t;

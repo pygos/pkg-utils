@@ -105,14 +105,10 @@ table of contents contains an entry with the following common structure:
 
           0       1       2       3
       +-------+-------+-------+-------+
-    0 |              mode             |
+    0 |     mode      |    user id    |
       +-------+-------+-------+-------+
-    1 |            user id            |
+    1 |   group id    |  path length  |
       +-------+-------+-------+-------+
-    2 |           group id            |
-      +-------+-------+-------+-------+
-    3 |  path length  |
-      +---------------+
 
 The mode field contains standard UNIX permissions. The user ID and group ID
 fields contain the numeric IDs of the user and group respectively that own
@@ -141,8 +137,6 @@ On the bit level, the mode field is structured as follows:
         |   | +----------------------- set GID bit
         |   +------------------------- set UID bit
         +----------------------------- file type
-
-The upper 16 bit of the mode filed must be set to zero.
 
 Currently, the following file types are supported:
 
