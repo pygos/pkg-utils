@@ -25,6 +25,7 @@
 #include "pkg/pkgformat.h"
 #include "pkg/pkgwriter.h"
 #include "command.h"
+#include "config.h"
 
 typedef struct dependency_t {
 	struct dependency_t *next;

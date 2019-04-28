@@ -39,6 +39,21 @@ UL_WARN_ADD([-pedantic])
 
 AC_SUBST([WARN_CFLAGS])
 
+##### configuration options #####
+
+AC_DEFINE([REPODIR], ["./"], [Default package repository directory])
+AC_DEFINE([INSTALLROOT], ["./"], [Default package installation root])
+
+AC_ARG_WITH([repo-dir],
+	[AS_HELP_STRING([--with-repo-dir],
+			[Set the default package repository directory])],
+	[AC_DEFINE_UNQUOTED([REPODIR], "$withval")])
+
+AC_ARG_WITH([install-root],
+	[AS_HELP_STRING([--with-install-root],
+			[Set the default package installation directory])],
+	[AC_DEFINE_UNQUOTED([INSTALLROOT], "$withval")])
+
 ##### search for dependencies #####
 
 have_zlib="no"

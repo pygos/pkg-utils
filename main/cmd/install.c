@@ -11,6 +11,7 @@
 #include "util/util.h"
 #include "depgraph.h"
 #include "command.h"
+#include "config.h"
 
 enum {
 	INSTALL_MODE_INSTALL = 0,
@@ -95,8 +96,8 @@ static int list_files(int repofd, const char *rootdir, TOC_FORMAT format,
 
 static int cmd_install(int argc, char **argv)
 {
-	int i, rootfd = AT_FDCWD, repofd = AT_FDCWD, flags = 0;
 	int ret = EXIT_FAILURE, mode = INSTALL_MODE_INSTALL;
+	int i, rootfd = -1, repofd = -1, flags = 0;
 	TOC_FORMAT format = TOC_FORMAT_PRETTY;
 	const char *rootdir = NULL;
 	struct pkg_dep_list list;
@@ -131,7 +132,7 @@ static int cmd_install(int argc, char **argv)
 			}
 			break;
 		case 'R':
-			if (repofd != AT_FDCWD) {
+			if (repofd != -1) {
 				fputs("repo specified more than once\n",
 				      stderr);
 				tell_read_help(argv[0]);
@@ -144,7 +145,7 @@ static int cmd_install(int argc, char **argv)
 			}
 			break;
 		case 'r':
-			if (rootfd != AT_FDCWD) {
+			if (rootfd != -1) {
 				fputs("root specified more than once\n",
 				      stderr);
 				tell_read_help(argv[0]);
@@ -180,6 +181,22 @@ static int cmd_install(int argc, char **argv)
 		}
 	}
 
+	if (repofd == -1) {
+		repofd = open(REPODIR, O_RDONLY | O_DIRECTORY);
+		if (repofd < 0) {
+			perror(REPODIR);
+			goto out;
+		}
+	}
+
+	if (rootfd == -1) {
+		rootfd = open(INSTALLROOT, O_RDONLY | O_DIRECTORY);
+		if (rootfd < 0) {
+			perror(INSTALLROOT);
+			goto out;
+		}
+	}
+
 	for (i = optind; i < argc; ++i) {
 		if (append_pkg(&list, argv[i]) == NULL)
 			goto out;
@@ -209,9 +226,9 @@ static int cmd_install(int argc, char **argv)
 
 	ret = EXIT_SUCCESS;
 out:
-	if (rootfd != AT_FDCWD)
+	if (rootfd != -1)
 		close(rootfd);
-	if (repofd != AT_FDCWD)
+	if (repofd != -1)
 		close(repofd);
 	pkg_list_cleanup(&list);
 	return ret;
@@ -229,11 +246,12 @@ static command_t install = {
 "Possible options:\n"
 "  --repo-dir, -R <path>     Specify the input repository path to fetch the\n"
 "                            packages from.\n"
-"  --root, -r <path>         A root directory to unpack the package. Default\n"
-"                            if not set is the current working directory.\n"
+"                            If not set, defaults to " REPODIR ".\n"
+"  --root, -r <path>         A root directory to unpack the package.\n"
+"                            If not set, defaults to " INSTALLROOT ".\n"
 "  --no-chown, -o            Do not change ownership of the extracted data.\n"
 "                            Keep the uid/gid of the user who runs the \n"
-"                            program."
+"                            program.\n"
 "  --no-chmod, -m            Do not change permission flags of the extarcted\n"
 "                            data. Use 0644 for all files and 0755 for all\n"
 "                            directories.\n"

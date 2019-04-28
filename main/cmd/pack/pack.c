@@ -65,9 +65,7 @@ static int cmd_pack(int argc, char **argv)
 	}
 
 	if (repodir == NULL) {
-		fputs("missing argument: repository directory\n", stderr);
-		tell_read_help(argv[0]);
-		return EXIT_FAILURE;
+		repodir = REPODIR;
 	}
 
 	if (optind < argc)
@@ -117,6 +115,7 @@ static command_t pack = {
 "  --file-list, -l <path>   Specify a file containing a list of input files.\n"
 "  --repo-dir, -r <path>    Specify the output repository path to store the\n"
 "                           package in.\n"
+"                           If not set, defaults to " REPODIR ".\n"
 "  --description, -d <path> Specify a file containing a description of the\n"
 "                           package, including information such as package\n"
 "                           dependencies, the actual package name, etc.\n"

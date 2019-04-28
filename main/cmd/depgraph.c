@@ -9,6 +9,7 @@
 
 #include "depgraph.h"
 #include "command.h"
+#include "config.h"
 
 static const struct option long_opts[] = {
 	{ "no-dependencies", no_argument, NULL, 'd' },
@@ -37,7 +38,7 @@ static void print_dot_graph(struct pkg_dep_list *list)
 
 static int cmd_depgraph(int argc, char **argv)
 {
-	int i, repofd = AT_FDCWD, ret = EXIT_FAILURE;
+	int i, repofd = -1, ret = EXIT_FAILURE;
 	struct pkg_dep_list list;
 	bool resolve_deps = true;
 
@@ -53,7 +54,7 @@ static int cmd_depgraph(int argc, char **argv)
 			resolve_deps = false;
 			break;
 		case 'R':
-			if (repofd != AT_FDCWD) {
+			if (repofd != -1) {
 				fputs("repo specified more than once\n",
 				      stderr);
 				tell_read_help(argv[0]);
@@ -71,6 +72,14 @@ static int cmd_depgraph(int argc, char **argv)
 		}
 	}
 
+	if (repofd == -1) {
+		repofd = open(REPODIR, O_RDONLY | O_DIRECTORY);
+		if (repofd < 0) {
+			perror(REPODIR);
+			goto out;
+		}
+	}
+
 	for (i = optind; i < argc; ++i) {
 		if (append_pkg(&list, argv[i]) == NULL)
 			goto out;
@@ -84,7 +93,7 @@ static int cmd_depgraph(int argc, char **argv)
 	print_dot_graph(&list);
 	ret = EXIT_SUCCESS;
 out:
-	if (repofd != AT_FDCWD)
+	if (repofd != -1)
 		close(repofd);
 	pkg_list_cleanup(&list);
 	return ret;
@@ -101,6 +110,7 @@ static command_t depgraph = {
 "Possible options:\n"
 "  --repo-dir, -R <path>     Specify the input repository path to fetch the\n"
 "                            packages from.\n"
+"                            If not set, defaults to " REPODIR ".\n"
 "  --no-dependencies, -d     Do not resolve dependencies, only process the\n"
 "                            packages listed on the command line.\n",
 	.run_cmd = cmd_depgraph,
