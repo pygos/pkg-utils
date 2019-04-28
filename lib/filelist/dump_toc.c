@@ -55,40 +55,6 @@ fail_type:
 	return -1;
 }
 
-static int print_sqfs(image_entry_t *ent, const char *root)
-{
-	mode_t mode = ent->mode & (~S_IFMT);
-	(void)root;
-
-	switch (ent->mode & S_IFMT) {
-	case S_IFCHR:
-		printf("%s c %o %u %u %u %u\n", ent->name, mode,
-		       (unsigned int)ent->uid, (unsigned int)ent->gid,
-		       major(ent->data.device.devno),
-		       minor(ent->data.device.devno));
-		break;
-	case S_IFBLK:
-		printf("%s b %o %u %u %u %u\n", ent->name, mode,
-		       (unsigned int)ent->uid, (unsigned int)ent->gid,
-		       major(ent->data.device.devno),
-		       minor(ent->data.device.devno));
-		break;
-	case S_IFLNK:
-		mode = 0777;
-		/* fall-through */
-	case S_IFDIR:
-	case S_IFREG:
-		printf("%s m %o %u %u\n", ent->name, mode,
-		       (unsigned int)ent->uid, (unsigned int)ent->gid);
-		break;
-	default:
-		fputs("unknown file type in table of contents\n", stderr);
-		return -1;
-	}
-
-	return 0;
-}
-
 static int print_initrd(image_entry_t *ent, const char *root)
 {
 	mode_t mode = ent->mode & (~S_IFMT);
@@ -186,7 +152,6 @@ static int print_pkg(image_entry_t *ent, const char *root)
 
 static print_fun_t printers[] = {
 	[TOC_FORMAT_PRETTY] = print_pretty,
-	[TOC_FORMAT_SQFS] = print_sqfs,
 	[TOC_FORMAT_INITRD] = print_initrd,
 	[TOC_FORMAT_PKG] = print_pkg,
 };

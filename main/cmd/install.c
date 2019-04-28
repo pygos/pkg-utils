@@ -118,9 +118,7 @@ static int cmd_install(int argc, char **argv)
 			break;
 		case 'l':
 			mode = INSTALL_MODE_LIST_FILES;
-			if (strcmp(optarg, "sqfs") == 0) {
-				format = TOC_FORMAT_SQFS;
-			} else if (strcmp(optarg, "initrd") == 0) {
+			if (strcmp(optarg, "initrd") == 0) {
 				format = TOC_FORMAT_INITRD;
 			} else if (strcmp(optarg, "pkg") == 0) {
 				format = TOC_FORMAT_PKG;
@@ -251,10 +249,6 @@ static command_t install = {
 "\n"
 "                            If \"detail\" is specified, a human readable,\n"
 "                            pretty printed format with details is used.\n"
-"\n"
-"                            If \"sqfs\" is specified, a squashfs pseudo\n"
-"                            file is genareated for setting permissions bits\n"
-"                            and ownership appropriately.\n"
 "\n"
 "                            If \"initrd\" is specified, the format of Linux\n"
 "                            gen_init_cpio is produced.\n",
