@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: ISC */
 #include "pkg2sqfs.h"
 
-static int write_block(node_t *node, sqfs_info_t *info,
+static int write_block(file_info_t *file, sqfs_info_t *info,
 		       compressor_stream_t *strm)
 {
 	size_t idx, bs;
@@ -18,10 +18,10 @@ static int write_block(node_t *node, sqfs_info_t *info,
 	if (ret > 0) {
 		ptr = info->scratch;
 		bs = ret;
-		node->data.file->blocksizes[idx] = bs;
+		file->blocksizes[idx] = bs;
 	} else {
 		ptr = info->block;
-		node->data.file->blocksizes[idx] = bs | (1 << 24);
+		file->blocksizes[idx] = bs | (1 << 24);
 	}
 
 	ret = write_retry(info->outfd, ptr, bs);
@@ -150,7 +150,7 @@ static int process_file(node_t *node, sqfs_info_t *info,
 			if (add_fragment(node->data.file, info, diff, strm))
 				return -1;
 		} else {
-			if (write_block(node, info, strm))
+			if (write_block(node->data.file, info, strm))
 				return -1;
 		}
 

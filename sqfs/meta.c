@@ -18,17 +18,17 @@ static size_t hard_link_count(node_t *node)
 	return 1;
 }
 
-static int write_dir(meta_writer_t *dm, node_t *node)
+static int write_dir(meta_writer_t *dm, dir_info_t *dir)
 {
 	sqfs_dir_header_t hdr;
 	sqfs_dir_entry_t ent;
 	size_t i, count;
 	node_t *c, *d;
 
-	c = node->data.dir->children;
-	node->data.dir->size = 0;
+	c = dir->children;
+	dir->size = 0;
 
-	node->data.dir->dref = (dm->written << 16) | dm->offset;
+	dir->dref = (dm->written << 16) | dm->offset;
 
 	while (c != NULL) {
 		count = 0;
@@ -47,7 +47,7 @@ static int write_dir(meta_writer_t *dm, node_t *node)
 		hdr.count = htole32(count - 1);
 		hdr.start_block = htole32(c->inode_ref >> 16);
 		hdr.inode_number = htole32(c->inode_num);
-		node->data.dir->size += sizeof(hdr);
+		dir->size += sizeof(hdr);
 
 		if (meta_writer_append(dm, &hdr, sizeof(hdr)))
 			return -1;
@@ -59,7 +59,7 @@ static int write_dir(meta_writer_t *dm, node_t *node)
 			ent.inode_number = htole16(c->inode_num - d->inode_num);
 			ent.type = htole16(c->type);
 			ent.size = htole16(strlen(c->name) - 1);
-			node->data.dir->size += sizeof(ent) + strlen(c->name);
+			dir->size += sizeof(ent) + strlen(c->name);
 
 			if (meta_writer_append(dm, &ent, sizeof(ent)))
 				return -1;
@@ -93,7 +93,7 @@ static int write_inode(sqfs_info_t *info, meta_writer_t *im, meta_writer_t *dm,
 	case S_IFBLK: node->type = SQFS_INODE_BDEV; break;
 	case S_IFCHR: node->type = SQFS_INODE_CDEV; break;
 	case S_IFDIR:
-		if (write_dir(dm, node))
+		if (write_dir(dm, node->data.dir))
 			return -1;
 
 		node->type = SQFS_INODE_DIR;
