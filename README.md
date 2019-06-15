@@ -11,17 +11,12 @@ Building this package produces a program called `pkg` that can:
 * dump the contents and meta data of such an archive for inspection.
 * install an archive and all its dependencies recursively, in topological
   order, to a specified root directory.
-* generate file listings from archives in formats suitable for `mksquashfs`
+* generate file listings from archives in formats suitable for `gensquashfs`
   and Linux `CONFIG_INITRAMFS_SOURCE`.
 * work out a build order for source packages given information on what source
   packages provide what binary packages and what binary packages they need in
   order to build.
 * produce pretty dependency graphs.
-
-
-An additional binary is produced called `pkg2sqfs` that can convert a package
-produced by `pkg` into a SquashFS filesystem image.
-
 
 ## License
 
