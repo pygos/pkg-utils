@@ -13,6 +13,22 @@ static void oom(const char *filename, size_t linenum)
 	input_file_complain(filename, linenum, "out of memory");
 }
 
+static void unescape_name(char *name)
+{
+	char *dst = name, *src = name + 1;
+
+	while (*src != '"' && *src != '\0') {
+		if (src[0] == '\\' && (src[1] == '\\' || src[1] == '"')) {
+			*(dst++) = src[1];
+			src += 2;
+		} else {
+			*(dst++) = *(src++);
+		}
+	}
+
+	*dst = '\0';
+}
+
 static image_entry_t *filelist_mkentry(char *line, const char *filename,
 				       size_t linenum, mode_t filetype)
 {
@@ -27,8 +43,23 @@ static image_entry_t *filelist_mkentry(char *line, const char *filename,
 	}
 
 	/* name */
-	for (i = 0; !isspace(line[i]) && line[i] != '\0'; ++i)
-		;
+	if (*line == '"') {
+		for (i = 1; line[i] != '"' && line[i] != '\0'; ++i) {
+			if (line[i] == '\\' &&
+			    (line[i + 1] == '\\' || line[i + 1] == '"')) {
+				++i;
+			}
+		}
+
+		if (line[i++] != '"') {
+			input_file_complain(filename, linenum,
+					    "missing \" after file name");
+			goto fail;
+		}
+	} else {
+		for (i = 0; !isspace(line[i]) && line[i] != '\0'; ++i)
+			;
+	}
 
 	if (!isspace(line[i])) {
 		input_file_complain(filename, linenum,
@@ -43,6 +74,10 @@ static image_entry_t *filelist_mkentry(char *line, const char *filename,
 	}
 
 	memcpy(ent->name, line, i);
+
+	if (ent->name[0] == '"')
+		unescape_name(ent->name);
+
 	if (canonicalize_name(ent->name)) {
 		input_file_complain(filename, linenum, "invalid file name");
 		goto fail;
