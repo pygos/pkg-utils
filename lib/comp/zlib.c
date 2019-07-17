@@ -112,46 +112,6 @@ static void zlib_destroy(compressor_stream_t *base)
 	free(zlib);
 }
 
-static ssize_t zlib_do_block(compressor_stream_t *base,
-			     const uint8_t *in, uint8_t *out,
-			     size_t insize, size_t outsize)
-{
-	zlib_stream_t *zlib = (zlib_stream_t *)base;
-	int ret;
-
-	if (zlib->compress) {
-		ret = deflateReset(&zlib->strm);
-	} else {
-		ret = inflateReset(&zlib->strm);
-	}
-
-	if (ret != Z_OK) {
-		fputs("resetting zlib stream failed\n", stderr);
-		return -1;
-	}
-
-	zlib->strm.next_in = (void *)in;
-	zlib->strm.avail_in = insize;
-	zlib->strm.next_out = out;
-	zlib->strm.avail_out = outsize;
-
-	if (zlib->compress) {
-		ret = deflate(&zlib->strm, Z_FINISH);
-	} else {
-		ret = inflate(&zlib->strm, Z_FINISH);
-	}
-
-	if (ret == Z_STREAM_END)
-		return (ssize_t)zlib->strm.total_out;
-
-	if (ret != Z_OK) {
-		fputs("zlib block processing failed\n", stderr);
-		return -1;
-	}
-
-	return 0;
-}
-
 static compressor_stream_t *create_stream(bool compress)
 {
 	zlib_stream_t *zlib = calloc(1, sizeof(*zlib));
@@ -170,7 +130,6 @@ static compressor_stream_t *create_stream(bool compress)
 	base->write = zlib_write;
 	base->read = zlib_read;
 	base->flush = zlib_flush;
-	base->do_block = zlib_do_block;
 	base->destroy = zlib_destroy;
 
 	if (compress) {

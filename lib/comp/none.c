@@ -52,19 +52,6 @@ static ssize_t dummy_read(compressor_stream_t *base,
 	return size;
 }
 
-static ssize_t dummy_do_block(compressor_stream_t *base,
-			      const uint8_t *in, uint8_t *out,
-			      size_t insize, size_t outsize)
-{
-	(void)base;
-
-	if (outsize < insize)
-		return 0;
-
-	memcpy(out, in, insize);
-	return insize;
-}
-
 static void dummy_flush(compressor_stream_t *base)
 {
 	(void)base;
@@ -91,7 +78,6 @@ static compressor_stream_t *create_dummy_stream(compressor_t *cmp,
 	base->write = dummy_write;
 	base->read = dummy_read;
 	base->flush = dummy_flush;
-	base->do_block = dummy_do_block;
 	base->destroy = dummy_destroy;
 	return base;
 }

@@ -93,65 +93,6 @@ static void lzma_flush(compressor_stream_t *base)
 	lzma->action = LZMA_FINISH;
 }
 
-static ssize_t lzma_comp_block(compressor_stream_t *base,
-			       const uint8_t *in, uint8_t *out,
-			       size_t insize, size_t outsize)
-{
-	lzma_stream_t *lzma = (lzma_stream_t *)base;
-	lzma_filter filters[5];
-	lzma_options_lzma opt;
-	size_t written = 0;
-	lzma_ret ret;
-
-	if (lzma_lzma_preset(&opt, LZMA_PRESET_DEFAULT)) {
-		fputs("error initializing LZMA options\n", stderr);
-		return -1;
-	}
-
-	if (lzma->dict_size)
-		opt.dict_size = lzma->dict_size;
-
-	filters[0].id = LZMA_FILTER_LZMA2;
-	filters[0].options = &opt;
-
-	filters[1].id = LZMA_VLI_UNKNOWN;
-	filters[1].options = NULL;
-
-	ret = lzma_stream_buffer_encode(filters, LZMA_CHECK_CRC32, NULL,
-					in, insize, out, &written, outsize);
-
-	if (ret == LZMA_OK)
-		return written;
-
-	if (ret != LZMA_BUF_ERROR) {
-		fputs("lzma block compress failed\n", stderr);
-		return -1;
-	}
-
-	return 0;
-}
-
-static ssize_t lzma_uncomp_block(compressor_stream_t *base,
-				 const uint8_t *in, uint8_t *out,
-				 size_t insize, size_t outsize)
-{
-	uint64_t memlimit = 32 * 1024 * 1024;
-	size_t dest_pos = 0;
-	size_t src_pos = 0;
-	lzma_ret ret;
-	(void)base;
-
-	ret = lzma_stream_buffer_decode(&memlimit, 0, NULL,
-					in, &src_pos, insize,
-					out, &dest_pos, outsize);
-
-	if (ret == LZMA_OK && insize == src_pos)
-		return (ssize_t)dest_pos;
-
-	fputs("lzma block extract failed\n", stderr);
-	return -1;
-}
-
 static void lzma_destroy(compressor_stream_t *base)
 {
 	lzma_stream_t *lzma = (lzma_stream_t *)base;
@@ -198,12 +139,8 @@ static compressor_stream_t *create_stream(bool compress, size_t dict_size)
 
 		ret = lzma_stream_encoder(&lzma->strm, filters,
 					  LZMA_CHECK_CRC32);
-
-		base->do_block = lzma_comp_block;
 	} else {
 		ret = lzma_stream_decoder(&lzma->strm, UINT64_MAX, 0);
-
-		base->do_block = lzma_uncomp_block;
 	}
 
 	if (ret != LZMA_OK)
