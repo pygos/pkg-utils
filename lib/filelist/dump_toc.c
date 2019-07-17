@@ -122,7 +122,7 @@ static int print_pkg(image_entry_t *ent, const char *root)
 		return -1;
 	}
 
-	printf(" %s 0%o %u %u ", ent->name, mode,
+	printf(" \"%s\" 0%o %u %u ", ent->name, mode,
 	       (unsigned int)ent->uid, (unsigned int)ent->gid);
 
 	switch (ent->mode & S_IFMT) {
