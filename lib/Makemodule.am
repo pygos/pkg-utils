@@ -30,7 +30,9 @@ endif
 
 libpkg_a_SOURCES = include/pkg/pkgformat.h include/pkg/pkgreader.h
 libpkg_a_SOURCES += include/pkg/pkgio.h include/pkg/pkgwriter.h
+libpkg_a_SOURCES += include/pkg/pkglist.h
 libpkg_a_SOURCES += lib/pkg/pkgreader.c lib/pkg/pkgwriter.c
 libpkg_a_SOURCES += lib/pkg/pkg_unpack.c lib/pkg/pkgio_rd_image_entry.c
+libpkg_a_SOURCES += lib/pkg/collect.c lib/pkg/pkglist.c lib/pkg/tsort.c
 
 noinst_LIBRARIES += libutil.a libfilelist.a libcomp.a libpkg.a

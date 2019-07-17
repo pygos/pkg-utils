@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "depgraph.h"
+#include "pkg/pkglist.h"
 
 struct pkg_dep_node *append_pkg(struct pkg_dep_list *list, const char *name)
 {

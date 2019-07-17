@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "depgraph.h"
+#include "pkg/pkglist.h"
 
 static void remove_dependency(struct pkg_dep_list *list,
 			      struct pkg_dep_node *pkg)

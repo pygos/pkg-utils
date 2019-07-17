@@ -1,7 +1,4 @@
-pkg_SOURCES = main/command.h main/depgraph.h
-pkg_SOURCES += main/pkg.c main/command.c
-pkg_SOURCES += main/depgraph/collect.c main/depgraph/pkglist.c
-pkg_SOURCES += main/depgraph/tsort.c
+pkg_SOURCES = main/command.h main/pkg.c main/command.c
 
 pkg_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/main
 pkg_CFLAGS = $(AM_CFLAGS)

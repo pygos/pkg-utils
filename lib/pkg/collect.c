@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "pkg/pkgreader.h"
-#include "depgraph.h"
+#include "pkg/pkglist.h"
 
 int collect_dependencies(int repofd, struct pkg_dep_list *list)
 {

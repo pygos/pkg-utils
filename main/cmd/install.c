@@ -7,9 +7,9 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+#include "pkg/pkglist.h"
 #include "pkg/pkgio.h"
 #include "util/util.h"
-#include "depgraph.h"
 #include "command.h"
 #include "config.h"
 

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 
-#include "depgraph.h"
+#include "pkg/pkglist.h"
 #include "command.h"
 #include "config.h"
 

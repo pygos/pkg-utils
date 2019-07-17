@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: ISC */
-#ifndef DEPGRAPH_H
-#define DEPGRAPH_H
+#ifndef PKGLIST_H
+#define PKGLIST_H
 
 struct pkg_dep_node {
 	char *name;
@@ -30,4 +30,4 @@ int collect_dependencies(int repofd, struct pkg_dep_list *list);
 
 int sort_by_dependencies(struct pkg_dep_list *list);
 
-#endif /* DEPGRAPH_H */
+#endif /* PKGLIST_H */
